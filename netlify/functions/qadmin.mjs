@@ -1,4 +1,4 @@
-import { st } from "../lib/store.mjs";
+import { rst } from "../lib/store.mjs";
 import { rebuildWall } from "../lib/wall.mjs";
 
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
@@ -7,14 +7,15 @@ const STATUSES = ["pending", "published", "held", "rejected", "hidden", "answere
 export default async (req) => {
   const pin = process.env.ADMIN_PIN;
   if (!pin || req.headers.get("authorization") !== `Bearer ${pin}`) return json({ error: "Unauthorized" }, 401);
-  const qs = st("questions");
+  const qs = rst("questions");
 
   if (req.method === "GET") { // every question with its status, newest first
     const keys = [];
     outer: for await (const page of qs.list({ prefix: "q/", paginate: true })) {
-      for (const b of page.blobs) { keys.push(b.key); if (keys.length >= 500) break outer; }
+      for (const b of page.blobs) { keys.push(b.key); if (keys.length >= 1500) break outer; }
     }
-    const recs = await Promise.all(keys.map(async (k) => ({ key: k, ...(await qs.get(k, { type: "json" })) })));
+    const recs = [];
+    for (let i = 0; i < keys.length; i += 100) recs.push(...(await Promise.all(keys.slice(i, i + 100).map(async (k) => ({ key: k, ...(await qs.get(k, { type: "json" })) })))));
     return json({ questions: recs.filter((r) => r.text) });
   }
   if (req.method === "POST") { // { key, status }: approving publishes it to the live pages within seconds

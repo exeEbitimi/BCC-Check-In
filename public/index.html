@@ -143,6 +143,7 @@ footer a{color:var(--y)}
         <div class="tq" id="passQr"></div>
       </div>
       <p class="msg">Screenshot or save this pass. We’ll scan the code at the door.</p>
+      <p class="msg" id="pMail"></p>
       <div class="act"><button class="btn" id="save" type="button">Save pass</button><a class="btn ghost" href="/ask">Ask a question</a><button class="btn ghost" id="again" type="button">Check in someone else</button></div>
     </article>
   </div>
@@ -191,6 +192,7 @@ function showPass(p,fresh){
   $("pTag").textContent="DAY "+day+", "+D.num+" NOV";
   $("pName").textContent=p.name;$("pId").textContent=p.id;$("pTime").textContent="Time in: "+fmt(p.timeIn);
   $("pBoth").textContent=p.both?"Checked in both days":"";
+  $("pMail").textContent=p.mail?"We’re emailing your check-in details to "+p.mail+". It can take a few minutes, so check your spam folder too.":"";
   qr($("passQr"),"BCC|"+p.id+"|"+p.name,150);
   if(fresh){toast(p.repeat?"You were already checked in today at "+fmt(p.timeIn)+".":"Check-in complete for Day "+day+". Your pass is ready.");$("pass").scrollIntoView({behavior:"smooth",block:"center"})}
 }
@@ -205,7 +207,7 @@ $("form").addEventListener("submit",async e=>{
     const r=await fetch("/api/checkin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...d,day:test?day:undefined})});
     const j=await r.json().catch(()=>({}));
     if(!r.ok){err.textContent=j.error||"Something went wrong. Please try again.";b.disabled=false;b.textContent="Check in for Day "+day;return}
-    const p={name:j.name,id:j.id,timeIn:j.timeIn,both:j.both,repeat:j.repeat},all=load("bcc_passes")||{};all[day]=p;store("bcc_passes",all);
+    const p={name:j.name,id:j.id,timeIn:j.timeIn,both:j.both,repeat:j.repeat,mail:j.emailTo},all=load("bcc_passes")||{};all[day]=p;store("bcc_passes",all);
     store("bcc_profile",d);showPass(p,true);
   }catch(x){err.textContent="We couldn’t reach the server. Check your internet connection and press check in again."}
   b.disabled=false;b.textContent="Check in for Day "+day;
@@ -218,7 +220,7 @@ $("lookBtn").onclick=async()=>{
     const r=await fetch("/api/checkin",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({lookup:v,day:test?day:undefined})});
     const j=await r.json().catch(()=>({}));
     if(!r.ok)err.textContent=j.error||"Something went wrong. Please try again.";
-    else{const p={name:j.name,id:j.id,timeIn:j.timeIn,both:j.both,repeat:j.repeat},all=load("bcc_passes")||{};all[day]=p;store("bcc_passes",all);$("lookup").value="";showPass(p,true)}
+    else{const p={name:j.name,id:j.id,timeIn:j.timeIn,both:j.both,repeat:j.repeat,mail:j.emailTo},all=load("bcc_passes")||{};all[day]=p;store("bcc_passes",all);$("lookup").value="";showPass(p,true)}
   }catch(x){err.textContent="We couldn’t reach the server. Check your internet connection and try again."}
   b.disabled=false;b.textContent="Check me in";
 };

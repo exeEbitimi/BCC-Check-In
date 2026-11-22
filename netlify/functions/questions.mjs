@@ -1,7 +1,7 @@
-import { st } from "../lib/store.mjs";
+import { st, rst } from "../lib/store.mjs";
 import { check } from "../lib/moderate.mjs";
 
-const MAX_PER_DAY = 8;
+const MAX_PER_DAY = 8, MAX_WORDS = 750;
 const json = (o, s = 200, edge) => new Response(JSON.stringify(o), {
   status: s,
   headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...(edge ? { "Netlify-CDN-Cache-Control": edge } : {}) },
@@ -18,7 +18,7 @@ async function attendee(ticket) {
 }
 
 export default async (req) => {
-  const qs = st("questions");
+  const qs = rst("questions");
 
   if (req.method === "GET") { // public live wall: only moderator-approved questions
     // ?fresh=1 (live screen, moderators) is never cached; the attendee page may be cached for a few seconds
@@ -42,8 +42,10 @@ export default async (req) => {
     return json({ questions: recs.filter(Boolean).map((r) => ({ text: r.text, to: r.to, status: r.status, at: r.at })) });
   }
 
-  const text = clean(b.text, 300), to = clean(b.to, 60) || "Any speaker";
+  const text = clean(b.text, 6000), to = clean(b.to, 60) || "Any speaker";
+  const words = text.split(" ").filter(Boolean).length;
   if (text.length < 10) return json({ error: "Please write at least 10 characters." }, 400);
+  if (words > MAX_WORDS) return json({ error: `Please keep your question to ${MAX_WORDS} words or fewer (yours is ${words}).` }, 400);
 
   const nKey = `n/${a.email}/${lagosDate()}`;
   const used = parseInt((await qs.get(nKey, { type: "text" })) || "0", 10);

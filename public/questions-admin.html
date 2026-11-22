@@ -105,7 +105,7 @@ function draw(){
 async function start(){
   $("lerr").textContent="";
   try{await sync();$("login").style.display="none";$("app").style.display="block";$("out").style.display="";sessionStorage.setItem("bcc_admin",pin);
-    clearInterval(timer);timer=setInterval(()=>sync().catch(()=>{}),6000)}
+    clearInterval(timer);timer=setInterval(()=>sync().catch(()=>{}),8000)}
   catch(e){pin="";sessionStorage.removeItem("bcc_admin");$("lerr").textContent=e.message==="auth"?"Wrong passcode.":"Couldn’t reach the server."}
 }
 $("go").onclick=()=>{pin=$("pin").value;start()};$("pin").addEventListener("keydown",e=>{if(e.key==="Enter")$("go").click()});

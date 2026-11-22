@@ -27,6 +27,7 @@ main{padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(3
 .card.new{animation:in .6s cubic-bezier(.2,1.4,.4,1);outline:6px solid var(--w)}
 @keyframes in{from{transform:translateY(-30px) scale(.94);opacity:0}}
 .card p{font-weight:800;font-size:clamp(1.25rem,2.2vw,2rem);line-height:1.25}
+.card.long p{font-size:1.1rem;font-weight:700;word-break:break-word}
 .meta{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-weight:700;font-size:1rem}
 .for{background:var(--k);color:var(--y);padding:.1rem .7rem;font-weight:800}
 .card.done{background:var(--w);color:var(--k);box-shadow:8px 8px 0 #1f9d55}.card.done .for{background:var(--k);color:var(--w)}
@@ -57,7 +58,7 @@ function draw(){
   const fresh=new Set(seen?Q.filter(q=>!seen.has(q.id)).map(q=>q.id):[]);
   $("wall").replaceChildren(...(rows.length?rows.map(q=>{
     const c=document.createElement("article"),p=document.createElement("p"),m=document.createElement("div");
-    c.className="card"+(q.answered?" done":"")+(fresh.has(q.id)?" new":"");p.textContent=q.text;m.className="meta";
+    c.className="card"+(q.answered?" done":"")+(fresh.has(q.id)?" new":"")+(q.text.length>350?" long":"");p.textContent=q.text;m.className="meta";
     const f=document.createElement("span");f.className="for";f.textContent="For "+q.to;
     const a=document.createElement("span");a.textContent=q.name+", "+fmt(q.at);m.append(f,a);
     if(q.answered){const t=document.createElement("span");t.className="tag";t.textContent="✓ Answered";m.append(t)}

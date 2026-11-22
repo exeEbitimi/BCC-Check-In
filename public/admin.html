@@ -58,10 +58,11 @@ td small{display:block;opacity:.7}
       <input id="q" type="search" placeholder="Search name, email, phone or ticket ID" aria-label="Search">
       <button class="btn" id="csv">Download list</button>
       <button class="btn ghost" id="refresh">Refresh</button>
-      <small id="status"></small>
+      <small id="status"></small><small id="mailstat" style="margin-left:1rem"></small>
     </div>
     <div class="err" id="err"></div>
     <div class="tw"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Creative field</th><th>Brand / organisation</th><th>City</th><th>Day 1 time in</th><th>Day 2 time in</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <p style="margin-top:1rem"><button class="btn ghost" id="more" type="button" style="display:none">Show more</button></p>
   </div>
 </main>
 <script>
@@ -77,14 +78,16 @@ async function sync(){
   const r=await fetch("/api/admin",{headers:hdr(),cache:"no-store"});
   if(r.status===401)throw new Error("auth");if(!r.ok)throw new Error("net");
   keys=(await r.json()).keys;draw();
-  const need=keys.filter(k=>!recs.has(k));
-  for(let i=0;i<need.length;i+=100){
-    $("status").textContent="Loading "+Math.min(i+100,need.length)+" of "+need.length+"…";
-    const p=await fetch("/api/admin",{method:"POST",headers:{...hdr(),"Content-Type":"application/json"},body:JSON.stringify({keys:need.slice(i,i+100)})});
+  fetch("/api/admin?mail=1",{headers:hdr(),cache:"no-store"}).then(r=>r.json()).then(m=>{$("mailstat").textContent=m.on?"Emails: "+m.sent+" sent, "+m.waiting+" waiting, "+m.failed+" failed":"Emails: not set up"}).catch(()=>{});
+  const need=keys.filter(k=>!recs.has(k)),chunks=[];for(let i=0;i<need.length;i+=100)chunks.push(need.slice(i,i+100));
+  let got=0,dt;const total=need.length;
+  await Promise.all([1,2,3,4].map(async()=>{while(chunks.length){
+    const c=chunks.shift(),p=await fetch("/api/admin",{method:"POST",headers:{...hdr(),"Content-Type":"application/json"},body:JSON.stringify({keys:c})});
     if(!p.ok)throw new Error("net");
-    (await p.json()).records.forEach(x=>{if(x.rec)recs.set(x.key,x.rec)});
-    draw();
-  }
+    (await p.json()).records.forEach(x=>{if(x.rec)recs.set(x.key,x.rec)});got+=c.length;
+    $("status").textContent="Loading "+got+" of "+total+"…";clearTimeout(dt);dt=setTimeout(draw,400);
+  }}));
+  draw();
   const miss=keys.filter(k=>!recs.has(k)).length;$("status").textContent=(miss?miss+" registrants’ details still loading, retrying. ":"")+"Updated "+new Date().toLocaleTimeString("en-NG",{timeZone:"Africa/Lagos",hour:"numeric",minute:"2-digit",second:"2-digit"});
 }
 function people(){
@@ -100,12 +103,14 @@ const small=t=>{const s=document.createElement("small");s.textContent=t;return s
 function view(){const q=$("q").value.toLowerCase().trim();
   return people().filter(p=>(filter==="all"||st(p)===filter)&&(!q||[p.name,p.email,p.phone,p.id1,p.id2].join(" ").toLowerCase().includes(q)))
     .sort((a,b)=>(b.t2||b.t1).localeCompare(a.t2||a.t1))}
+let limit=200;
 function draw(){
   const P=people(),n=k=>P.filter(p=>k==="all"||st(p)===k).length;
   $("stats").replaceChildren(...[["all","Checked in at least once"],["both","Both days"],["d1","Day 1 only"],["d2","Day 2 only"]].map(([k,l])=>{
     const b=document.createElement("button");b.className="stat"+(k==="both"?" both":"")+(filter===k?" on":"");
     const v=document.createElement("b");v.textContent=n(k);b.append(v,l);b.onclick=()=>{filter=k;draw()};return b}));
-  $("rows").replaceChildren(...view().map(p=>{
+  const V=view(),shown=V.slice(0,limit);$("more").style.display=V.length>limit?"inline-block":"none";$("more").textContent="Show more ("+(V.length-limit)+" more)";
+  $("rows").replaceChildren(...shown.map(p=>{
     const tr=document.createElement("tr"),s=st(p),c=document.createElement("span");c.className="chip"+(s==="both"?" b":"");c.textContent=label[s];
     cell(tr,Object.assign(document.createElement("b"),{textContent:p.name}));cell(tr,p.shown);cell(tr,p.phone);cell(tr,p.field);cell(tr,p.brand||"–");cell(tr,p.city);
     const t=(iso,h)=>{const e=document.createElement("span");e.className="time";e.textContent=iso?fmt(iso):h?"…":"Not checked in";if(!iso&&!h)e.style.opacity=".45";return e};
@@ -114,11 +119,11 @@ function draw(){
 const safe=v=>{v=String(v??"");return '"'+(/^[=+\-@]/.test(v)?"'"+v:v).replace(/"/g,'""')+'"'};
 $("csv").onclick=()=>{const L=view().map(p=>[p.name,p.shown,p.phone,p.field,p.brand,p.city,fmt(p.t1),fmt(p.t2),label[st(p)],p.id1,p.id2].map(safe).join(","));
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["Name,Email,Phone,Field,Brand,City,Day 1 time in,Day 2 time in,Status,Day 1 ticket,Day 2 ticket\n"+L.join("\n")],{type:"text/csv"}));a.download="bcc-checkins-"+filter+".csv";a.click()};
-$("q").oninput=draw;
+$("q").oninput=()=>{limit=200;draw()};$("more").onclick=()=>{limit+=300;draw()};
 async function start(){
   $("lerr").textContent="";
   try{await sync();$("login").style.display="none";$("app").style.display="block";$("out").style.display="";sessionStorage.setItem("bcc_admin",pin);
-    clearInterval(timer);timer=setInterval(()=>sync().catch(()=>{}),30000)}
+    clearInterval(timer);timer=setInterval(()=>sync().catch(()=>{}),45000)}
   catch(e){pin="";sessionStorage.removeItem("bcc_admin");
     if($("app").style.display==="block")$("err").textContent="Couldn’t refresh. Check your connection.";
     else $("lerr").textContent=e.message==="auth"?"Wrong passcode.":"Couldn’t reach the server."}

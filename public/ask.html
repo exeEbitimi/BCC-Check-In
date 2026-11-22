@@ -45,7 +45,7 @@ input:focus,select:focus,textarea:focus{outline:4px solid var(--y);border-color:
 table{border-collapse:collapse;width:100%}
 th,td{text-align:left;padding:.75rem .8rem;border-bottom:2px solid var(--k);vertical-align:top}
 th{background:var(--k);color:var(--y)}
-td.q{font-weight:700;width:46%}tr.done,tr.done td{background:#e4e4e4}.chip{background:var(--y);font-weight:800;padding:.05rem .5rem;font-size:.8rem;margin-left:.4rem}
+td.q{font-weight:700;width:46%;word-break:break-word}tr.done,tr.done td{background:#e4e4e4}.chip{background:var(--y);font-weight:800;padding:.05rem .5rem;font-size:.8rem;margin-left:.4rem}
 .live{display:inline-flex;align-items:center;gap:.4rem;background:var(--r);color:var(--w);font:800 .8rem var(--body);padding:.15rem .6rem;vertical-align:middle}.live::before{content:"";width:.5rem;height:.5rem;border-radius:50%;background:var(--w);animation:blink 1.2s steps(2) infinite}@keyframes blink{50%{opacity:0}}
 #mine{margin-top:1.4rem}#mine h3{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:1.5rem;margin-bottom:.4rem}#mine li{list-style:none;border-top:2px solid var(--k);padding:.5rem 0;font-size:.95rem}#mine li b{display:block}#mine .st{background:var(--y);font-weight:800;font-size:.8rem;padding:.05rem .5rem}.empty{padding:1.4rem;border:3px dashed var(--k);font-weight:700;display:none}
 .toast{position:fixed;left:50%;top:1rem;transform:translate(-50%,-170%);z-index:10;background:var(--y);color:var(--k);border:4px solid var(--k);padding:.9rem 1.4rem;font-weight:800;box-shadow:6px 6px 0 var(--r);transition:transform .4s cubic-bezier(.2,1.3,.4,1);max-width:92vw}
@@ -78,7 +78,7 @@ td.q{font-weight:700;width:46%}tr.done,tr.done td{background:#e4e4e4}.chip{backg
       <div id="ask">
         <div class="who"><span>Asking as <span id="who"></span></span><button class="link" id="swap" type="button">Not you?</button></div>
         <div class="f"><label for="to">Who is it for?</label><select id="to"></select></div>
-        <div class="f"><label for="text">Your question</label><textarea id="text" maxlength="300" placeholder="Ask something specific so the speaker can answer it well."></textarea><div class="cnt" id="cnt">0 / 300</div></div>
+        <div class="f"><label for="text">Your question</label><textarea id="text" maxlength="6000" placeholder="Ask something specific so the speaker can answer it well."></textarea><div class="cnt" id="cnt">0 / 750 words</div></div>
         <div class="err" id="err" role="alert"></div>
         <button class="btn" id="send" type="button">Send question</button>
         <div id="mine"></div>
@@ -117,15 +117,17 @@ async function verify(t,auto){
 $("vbtn").onclick=()=>{const t=$("ticket").value.trim();if(!t){$("verr").textContent="Enter your ticket ID.";return}verify(t,false)};
 $("ticket").addEventListener("keydown",e=>{if(e.key==="Enter")$("vbtn").click()});
 $("swap").onclick=()=>{try{localStorage.removeItem("bcc_ticket")}catch(e){}ticket="";$("ask").style.display="none";$("verify").style.display="block";$("ticket").value="";$("ticket").focus()};
-$("text").oninput=()=>$("cnt").textContent=$("text").value.length+" / 300";
+const wc=s=>s.trim().split(/\s+/).filter(Boolean).length;
+$("text").oninput=()=>{const n=wc($("text").value);$("cnt").textContent=n+" / 750 words";$("cnt").style.color=n>750?"#E4002B":""};
 
 $("send").onclick=async()=>{
   const err=$("err"),b=$("send"),text=$("text").value.trim();err.textContent="";
   if(text.length<10){err.textContent="Please write at least 10 characters.";return}
+  if(wc(text)>750){err.textContent="Please keep your question to 750 words or fewer.";return}
   b.disabled=true;b.textContent="Sending…";
   try{const{ok,j}=await api({ticket,to:$("to").value,text});
     if(!ok)err.textContent=j.error||"Something went wrong. Please try again.";
-    else{$("text").value="";$("cnt").textContent="0 / 300";
+    else{$("text").value="";$("cnt").textContent="0 / 750 words";
       toast("Thanks! Your question is with the moderators and will appear once approved.");mine()}
   }catch(e){err.textContent="We couldn’t reach the server. Check your connection and try again."}
   b.disabled=false;b.textContent="Send question";
@@ -153,7 +155,7 @@ async function mine(){
       const li=document.createElement("li"),b=document.createElement("b"),s=document.createElement("span");b.textContent=q.text;s.className="st";s.textContent=MST[q.status]||q.status;li.append(b,"For "+q.to+" ",s);return li})]:[]))
   }catch(e){}
 }
-list();setInterval(list,5000);setInterval(mine,10000);
+list();setInterval(()=>{if(!document.hidden)list()},10000);setInterval(()=>{if(ticket&&!document.hidden)mine()},15000);
 const saved=localStorage.getItem("bcc_ticket")||((l=>l&&(l[2]||l[1]))(load("bcc_passes"))||{}).id;
 if(saved){$("ticket").value=saved;verify(saved,true)}
 </script>
