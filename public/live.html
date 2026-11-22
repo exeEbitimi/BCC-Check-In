@@ -38,7 +38,7 @@ main{padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(3
 <body>
 <header>
   <img src="bcc-logo.webp" alt="Bayelsa Creatives Converge">
-  <h1>Live questions</h1><span class="live">Live</span><span id="count" aria-live="polite"></span>
+  <h1>Live questions</h1><span class="live">Live</span><span id="count" aria-live="polite"></span><small id="upd" style="opacity:.6"></small>
   <div class="chips" id="chips"></div><button class="fs" id="fs" type="button">Full screen</button>
 </header>
 <main id="wall"></main>
@@ -47,7 +47,7 @@ const $=id=>document.getElementById(id);
 const fmt=iso=>new Date(iso).toLocaleTimeString("en-NG",{timeZone:"Africa/Lagos",hour:"numeric",minute:"2-digit"});
 let Q=[],seen=null,filter=new URLSearchParams(location.search).get("for")||"";
 async function pull(){
-  try{const r=await fetch("/api/questions",{cache:"no-store"});if(!r.ok)return;Q=(await r.json()).questions||[];draw()}catch(e){}
+  try{const r=await fetch("/api/questions?fresh=1&t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const j=await r.json();Q=j.questions||[];$("upd").textContent=j.updatedAt?"Updated "+new Date(j.updatedAt).toLocaleTimeString("en-NG",{timeZone:"Africa/Lagos",hour:"numeric",minute:"2-digit",second:"2-digit"}):"";draw()}catch(e){}
 }
 function draw(){
   const names=[...new Set(Q.map(q=>q.to))];

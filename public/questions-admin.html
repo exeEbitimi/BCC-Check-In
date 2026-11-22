@@ -80,6 +80,8 @@ async function setStatus(key,status){
   const r=await fetch("/api/qadmin",{method:"POST",headers:hdr(),body:JSON.stringify({key,status})});
   if(!r.ok){$("err").textContent="Couldn’t update that question.";return}
   const q=Q.find(x=>x.key===key);if(q)q.status=status;draw();
+  if(status==="published"||status==="answered"){try{const v=await(await fetch("/api/questions?fresh=1&t="+Date.now(),{cache:"no-store"})).json();
+    $("status").textContent=v.questions.some(x=>x.id===key)?"✓ On the live screen now":"Saved, but the live screen hasn’t updated yet. Press Refresh in a few seconds."}catch(e){}}
 }
 function draw(){
   const np=Q.filter(q=>q.status==="pending"||q.status==="held").length;document.title=(np?"("+np+") ":"")+"BCC 3.0 Question Moderation";

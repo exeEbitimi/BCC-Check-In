@@ -21,8 +21,10 @@ export default async (req) => {
   const qs = st("questions");
 
   if (req.method === "GET") { // public live wall: only moderator-approved questions
-    const wall = await qs.get("wall/live", { type: "json" });
-    return json({ questions: wall?.questions || [] }, 200, "public, max-age=3");
+    // ?fresh=1 (live screen, moderators) is never cached; the attendee page may be cached for a few seconds
+    const fresh = new URL(req.url).searchParams.has("fresh");
+    const wall = await qs.get("wall/live", { type: "json", consistency: "strong" });
+    return json({ questions: wall?.questions || [], updatedAt: wall?.updatedAt || null }, 200, fresh ? undefined : "public, max-age=5");
   }
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
