@@ -33,7 +33,7 @@ input:focus{outline:4px solid var(--y);border-color:var(--r)}
 .stat.on{background:var(--y);box-shadow:5px 5px 0 var(--k)}.stat.both b{color:var(--r)}
 .tools{display:flex;flex-wrap:wrap;gap:.7rem;align-items:center;margin-bottom:1rem}.tools input{max-width:340px}
 .tools small{margin-left:auto;font-weight:700}
-.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:900px}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:1280px}
 th,td{text-align:left;padding:.6rem .8rem;border-bottom:2px solid var(--k);vertical-align:top}
 th{background:var(--k);color:var(--y);position:sticky;top:0}
 td small{display:block;opacity:.7}
@@ -43,7 +43,7 @@ td small{display:block;opacity:.7}
 </style>
 </head>
 <body>
-<div class="bar"><div class="wrap"><img src="bcc-logo.webp" alt=""><b>Check-in admin</b><button class="btn" id="out" style="display:none">Sign out</button></div></div>
+<div class="bar"><div class="wrap"><img src="bcc-logo.webp" alt=""><b>Check-in admin</b><a class="btn" href="questions-admin.html" style="text-decoration:none">Questions</a><button class="btn" id="out" style="display:none">Sign out</button></div></div>
 <main class="wrap">
   <div id="login">
     <h2>Sign in</h2>
@@ -61,7 +61,7 @@ td small{display:block;opacity:.7}
       <small id="status"></small>
     </div>
     <div class="err" id="err"></div>
-    <div class="tw"><table><thead><tr><th>Name</th><th>Contact</th><th>Field</th><th>Day 1 time in</th><th>Day 2 time in</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="tw"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Creative field</th><th>Brand / organisation</th><th>City</th><th>Day 1 time in</th><th>Day 2 time in</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
   </div>
 </main>
 <script>
@@ -91,7 +91,7 @@ function people(){
   const m=new Map();
   keys.forEach(k=>{const e=emailOf(k),p=m.get(e)||{email:e,r:{}};p.r[dayOf(k)]=recs.get(k)||null;p.has=p.has||{};p.has[dayOf(k)]=true;m.set(e,p)});
   return[...m.values()].map(p=>{const a=p.r[2]||p.r[1]||{};
-    return{email:p.email,name:a.name||"…",phone:a.phone||"",field:a.discipline||"",brand:a.brand||"",city:a.city||"",
+    return{email:p.email,shown:a.emailInput||p.email,name:a.name||"…",phone:a.phone||"",field:a.discipline||"",brand:a.brand||"",city:a.city||"",
       t1:p.r[1]?.timeIn||"",t2:p.r[2]?.timeIn||"",id1:p.r[1]?.id||"",id2:p.r[2]?.id||"",h1:!!p.has[1],h2:!!p.has[2]}});
 }
 const st=p=>p.h1&&p.h2?"both":p.h1?"d1":"d2",label={both:"Both days",d1:"Day 1 only",d2:"Day 2 only"};
@@ -107,14 +107,12 @@ function draw(){
     const v=document.createElement("b");v.textContent=n(k);b.append(v,l);b.onclick=()=>{filter=k;draw()};return b}));
   $("rows").replaceChildren(...view().map(p=>{
     const tr=document.createElement("tr"),s=st(p),c=document.createElement("span");c.className="chip"+(s==="both"?" b":"");c.textContent=label[s];
-    cell(tr,Object.assign(document.createElement("b"),{textContent:p.name}),small(p.brand));
-    cell(tr,p.email,small(p.phone));
-    cell(tr,p.field,small(p.city));
+    cell(tr,Object.assign(document.createElement("b"),{textContent:p.name}));cell(tr,p.shown);cell(tr,p.phone);cell(tr,p.field);cell(tr,p.brand||"–");cell(tr,p.city);
     const t=(iso,h)=>{const e=document.createElement("span");e.className="time";e.textContent=iso?fmt(iso):h?"…":"Not checked in";if(!iso&&!h)e.style.opacity=".45";return e};
     cell(tr,t(p.t1,p.h1),small(p.id1));cell(tr,t(p.t2,p.h2),small(p.id2));cell(tr,c);return tr}));
 }
 const safe=v=>{v=String(v??"");return '"'+(/^[=+\-@]/.test(v)?"'"+v:v).replace(/"/g,'""')+'"'};
-$("csv").onclick=()=>{const L=view().map(p=>[p.name,p.email,p.phone,p.field,p.brand,p.city,fmt(p.t1),fmt(p.t2),label[st(p)],p.id1,p.id2].map(safe).join(","));
+$("csv").onclick=()=>{const L=view().map(p=>[p.name,p.shown,p.phone,p.field,p.brand,p.city,fmt(p.t1),fmt(p.t2),label[st(p)],p.id1,p.id2].map(safe).join(","));
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["Name,Email,Phone,Field,Brand,City,Day 1 time in,Day 2 time in,Status,Day 1 ticket,Day 2 ticket\n"+L.join("\n")],{type:"text/csv"}));a.download="bcc-checkins-"+filter+".csv";a.click()};
 $("q").oninput=draw;
 async function start(){

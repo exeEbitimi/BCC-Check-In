@@ -8,3 +8,13 @@
   from = "/admin"
   to = "/admin.html"
   status = 200
+
+[[redirects]]
+  from = "/ask"
+  to = "/ask.html"
+  status = 200
+
+[[redirects]]
+  from = "/live"
+  to = "/live.html"
+  status = 200

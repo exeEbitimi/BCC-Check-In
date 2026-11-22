@@ -143,7 +143,7 @@ footer a{color:var(--y)}
         <div class="tq" id="passQr"></div>
       </div>
       <p class="msg">Screenshot or save this pass. We’ll scan the code at the door.</p>
-      <div class="act"><button class="btn" id="save" type="button">Save pass</button><button class="btn ghost" id="again" type="button">Check in someone else</button></div>
+      <div class="act"><button class="btn" id="save" type="button">Save pass</button><a class="btn ghost" href="/ask">Ask a question</a><button class="btn ghost" id="again" type="button">Check in someone else</button></div>
     </article>
   </div>
 </div></section>
@@ -198,7 +198,6 @@ $("form").addEventListener("submit",async e=>{
   e.preventDefault();const f=e.target,err=$("err");err.textContent="";
   if(f.website.value)return;
   const d={};["name","email","phone","discipline","brand","city"].forEach(k=>d[k]=f[k].value.trim());
-  d.email=d.email.toLowerCase();
   if(!d.name||!/^\S+@\S+\.\S+$/.test(d.email)||d.phone.replace(/\D/g,"").length<10||!d.discipline||!d.city){err.textContent="Please complete every required field with a valid email and phone number.";return}
   if(!$("consent").checked){err.textContent="Please tick the box to agree before checking in.";return}
   const b=$("go");b.disabled=true;b.textContent="Checking in…";

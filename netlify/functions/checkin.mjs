@@ -36,10 +36,10 @@ export default async (req) => {
       prior = (await store.get(`d1/${w}`, { type: "json" })) || (await store.get(`d2/${w}`, { type: "json" }));
     }
     if (!prior) return json({ error: "We couldn’t find that email or ticket ID. Check it, or fill in your details below." }, 404);
-    d = { name: prior.name, email: prior.email, phone: prior.phone, discipline: prior.discipline, brand: prior.brand, city: prior.city };
+    d = { name: prior.name, emailInput: prior.emailInput || prior.email, email: prior.email, phone: prior.phone, discipline: prior.discipline, brand: prior.brand, city: prior.city };
   } else {
     d = {
-      name: clean(b.name), email: clean(b.email, 160).toLowerCase(), phone: clean(b.phone, 30),
+      name: clean(b.name), emailInput: clean(b.email, 160), email: clean(b.email, 160).toLowerCase(), phone: clean(b.phone, 30),
       discipline: clean(b.discipline), brand: clean(b.brand), city: clean(b.city),
     };
     if (!d.name || !/^\S+@\S+\.\S+$/.test(d.email) || d.phone.replace(/\D/g, "").length < 10 || !d.discipline || !d.city)

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BCC 3.0 Live Questions</title>
+<link rel="icon" href="bcc-logo.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--y:#FFCD03;--k:#000;--w:#fff;--r:#E4002B;--disp:"Bricolage Grotesque","Arial Narrow",Arial,sans-serif;--body:"Manrope",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--body);background:var(--k);color:var(--w);min-height:100vh}
+:focus-visible{outline:4px solid var(--y);outline-offset:3px}
+header{position:sticky;top:0;z-index:5;background:var(--k);border-bottom:5px solid var(--r);padding:.6rem 1.5rem;display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap}
+header img{width:64px;height:64px}
+h1{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:clamp(1.8rem,4vw,3rem);color:var(--y);line-height:1}
+.live{display:inline-flex;align-items:center;gap:.4rem;background:var(--r);font:800 .85rem var(--body);padding:.2rem .7rem}
+.live::before{content:"";width:.55rem;height:.55rem;border-radius:50%;background:var(--w);animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-left:auto}
+.chip,.fs{font:800 .95rem var(--body);background:transparent;color:var(--y);border:3px solid var(--y);padding:.35rem .9rem;cursor:pointer}
+.chip.on,.chip:hover,.fs:hover{background:var(--y);color:var(--k)}
+main{padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.4rem}
+.card{background:var(--y);color:var(--k);padding:1.3rem 1.4rem;display:flex;flex-direction:column;gap:1rem;justify-content:space-between;box-shadow:8px 8px 0 var(--r)}
+.card.new{animation:in .6s cubic-bezier(.2,1.4,.4,1);outline:6px solid var(--w)}
+@keyframes in{from{transform:translateY(-30px) scale(.94);opacity:0}}
+.card p{font-weight:800;font-size:clamp(1.25rem,2.2vw,2rem);line-height:1.25}
+.meta{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-weight:700;font-size:1rem}
+.for{background:var(--k);color:var(--y);padding:.1rem .7rem;font-weight:800}
+.card.done{background:#333;color:#ccc;box-shadow:8px 8px 0 #555}.card.done .for{background:#555;color:#fff}
+.tag{background:var(--r);color:var(--w);font-weight:800;font-size:.8rem;padding:.05rem .5rem}
+.empty{grid-column:1/-1;text-align:center;font:800 clamp(1.5rem,3vw,2.4rem) var(--disp);font-stretch:75%;color:var(--y);padding:4rem 1rem}
+@media(prefers-reduced-motion:reduce){.live::before{animation:none}.card.new{animation:none}}
+</style>
+</head>
+<body>
+<header>
+  <img src="bcc-logo.webp" alt="Bayelsa Creatives Converge">
+  <h1>Live questions</h1><span class="live">Live</span><span id="count" aria-live="polite"></span>
+  <div class="chips" id="chips"></div><button class="fs" id="fs" type="button">Full screen</button>
+</header>
+<main id="wall"></main>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=iso=>new Date(iso).toLocaleTimeString("en-NG",{timeZone:"Africa/Lagos",hour:"numeric",minute:"2-digit"});
+let Q=[],seen=null,filter=new URLSearchParams(location.search).get("for")||"";
+async function pull(){
+  try{const r=await fetch("/api/questions",{cache:"no-store"});if(!r.ok)return;Q=(await r.json()).questions||[];draw()}catch(e){}
+}
+function draw(){
+  const names=[...new Set(Q.map(q=>q.to))];
+  $("chips").replaceChildren(...["",...names].map(n=>{const b=document.createElement("button");b.className="chip"+(filter===n?" on":"");b.textContent=n||"Everyone";b.onclick=()=>{filter=n;draw()};return b}));
+  const rows=Q.filter(q=>!filter||q.to===filter);
+  $("count").textContent=rows.length+(rows.length===1?" question":" questions");$("count").style.color="#fff";
+  const fresh=new Set(seen?Q.filter(q=>!seen.has(q.id)).map(q=>q.id):[]);
+  $("wall").replaceChildren(...(rows.length?rows.map(q=>{
+    const c=document.createElement("article"),p=document.createElement("p"),m=document.createElement("div");
+    c.className="card"+(q.answered?" done":"")+(fresh.has(q.id)?" new":"");p.textContent=q.text;m.className="meta";
+    const f=document.createElement("span");f.className="for";f.textContent="For "+q.to;
+    const a=document.createElement("span");a.textContent=q.name+", "+fmt(q.at);m.append(f,a);
+    if(q.answered){const t=document.createElement("span");t.className="tag";t.textContent="Answered";m.append(t)}
+    c.append(p,m);return c}):[Object.assign(document.createElement("div"),{className:"empty",textContent:"Questions will appear here as soon as they’re approved."})]));
+  seen=new Set(Q.map(q=>q.id));
+}
+$("fs").onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
+pull();setInterval(pull,4000);
+</script>
+</body>
+</html>
