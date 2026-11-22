@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>BCC 3.0 Check-in Admin</title>
+<link rel="icon" href="bcc-logo.webp">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--y:#FFCD03;--k:#000;--w:#fff;--r:#E4002B;--disp:"Bricolage Grotesque","Arial Narrow",Arial,sans-serif;--body:"Manrope",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--body);color:var(--k);background:var(--w);line-height:1.5}
+:focus-visible{outline:4px solid var(--r);outline-offset:3px}
+.wrap{width:min(1240px,100% - 2rem);margin-inline:auto}
+.bar{background:var(--k);color:var(--y);padding:.5rem 0;border-bottom:5px solid var(--r)}
+.bar .wrap{display:flex;align-items:center;gap:1rem}.bar img{width:64px;height:64px}
+.bar b{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:1.8rem;flex:1}
+.btn{font:800 1rem var(--body);background:var(--k);color:var(--y);border:3px solid var(--k);padding:.7rem 1.3rem;cursor:pointer}
+.btn:hover{background:var(--r);border-color:var(--r);color:var(--w)}
+.btn.ghost{background:transparent;color:inherit;border-color:currentColor}
+.bar .btn{background:var(--y);color:var(--k);border-color:var(--y)}
+main{padding:2rem 0 4rem}
+h2{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:3rem;line-height:1;margin-bottom:1rem}
+input{font:inherit;border:3px solid var(--k);padding:.7rem .9rem;border-radius:0;width:100%}
+input:focus{outline:4px solid var(--y);border-color:var(--r)}
+#login{max-width:420px;padding-top:2rem}#login .row{display:flex;gap:.6rem;margin-top:.4rem}
+.err{color:var(--r);font-weight:800;min-height:1.4em;margin-top:.5rem}
+#app{display:none}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin:1rem 0 1.5rem}
+.stat{border:4px solid var(--k);padding:.8rem 1rem;background:var(--w);text-align:left;font:inherit;cursor:pointer}
+.stat b{display:block;font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:3rem;line-height:1}
+.stat.on{background:var(--y);box-shadow:5px 5px 0 var(--k)}.stat.both b{color:var(--r)}
+.tools{display:flex;flex-wrap:wrap;gap:.7rem;align-items:center;margin-bottom:1rem}.tools input{max-width:340px}
+.tools small{margin-left:auto;font-weight:700}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:900px}
+th,td{text-align:left;padding:.6rem .8rem;border-bottom:2px solid var(--k);vertical-align:top}
+th{background:var(--k);color:var(--y);position:sticky;top:0}
+td small{display:block;opacity:.7}
+.chip{font-weight:800;padding:.1rem .6rem;background:var(--y);white-space:nowrap}.chip.b{background:var(--r);color:var(--w)}
+.time{font-weight:800;white-space:nowrap}
+@media(max-width:760px){.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="bar"><div class="wrap"><img src="bcc-logo.webp" alt=""><b>Check-in admin</b><button class="btn" id="out" style="display:none">Sign out</button></div></div>
+<main class="wrap">
+  <div id="login">
+    <h2>Sign in</h2>
+    <label for="pin"><b>Admin passcode</b></label>
+    <div class="row"><input id="pin" type="password" autocomplete="current-password"><button class="btn" id="go">Open</button></div>
+    <div class="err" id="lerr" role="alert"></div>
+  </div>
+  <div id="app">
+    <h2>Check-ins</h2>
+    <div class="stats" id="stats"></div>
+    <div class="tools">
+      <input id="q" type="search" placeholder="Search name, email, phone or ticket ID" aria-label="Search">
+      <button class="btn" id="csv">Download list</button>
+      <button class="btn ghost" id="refresh">Refresh</button>
+      <small id="status"></small>
+    </div>
+    <div class="err" id="err"></div>
+    <div class="tw"><table><thead><tr><th>Name</th><th>Contact</th><th>Field</th><th>Day 1 time in</th><th>Day 2 time in</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let pin=sessionStorage.getItem("bcc_admin")||"",filter="all",timer;
+const recs=new Map();            // key -> full record
+let keys=[];                     // all keys from the server
+const fmt=iso=>iso?new Date(iso).toLocaleString("en-NG",{timeZone:"Africa/Lagos",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}):"";
+const hdr=()=>({Authorization:"Bearer "+pin});
+const emailOf=k=>decodeURIComponent(k.slice(k.indexOf("/")+1)),dayOf=k=>k[1];
+
+async function sync(){
+  const r=await fetch("/api/admin",{headers:hdr(),cache:"no-store"});
+  if(r.status===401)throw new Error("auth");if(!r.ok)throw new Error("net");
+  keys=(await r.json()).keys;draw();
+  const need=keys.filter(k=>!recs.has(k));
+  for(let i=0;i<need.length;i+=100){
+    $("status").textContent="Loading "+Math.min(i+100,need.length)+" of "+need.length+"…";
+    const p=await fetch("/api/admin",{method:"POST",headers:{...hdr(),"Content-Type":"application/json"},body:JSON.stringify({keys:need.slice(i,i+100)})});
+    if(!p.ok)throw new Error("net");
+    (await p.json()).records.forEach(x=>recs.set(x.day===1||x.day===2?"d"+x.day+"/"+encodeURIComponent(x.email):"",x));
+    draw();
+  }
+  $("status").textContent="Updated "+new Date().toLocaleTimeString("en-NG",{timeZone:"Africa/Lagos",hour:"numeric",minute:"2-digit",second:"2-digit"});
+}
+function people(){
+  const m=new Map();
+  keys.forEach(k=>{const e=emailOf(k),p=m.get(e)||{email:e,r:{}};p.r[dayOf(k)]=recs.get(k)||null;p.has=p.has||{};p.has[dayOf(k)]=true;m.set(e,p)});
+  return[...m.values()].map(p=>{const a=p.r[2]||p.r[1]||{};
+    return{email:p.email,name:a.name||"…",phone:a.phone||"",field:a.discipline||"",brand:a.brand||"",city:a.city||"",
+      t1:p.r[1]?.timeIn||"",t2:p.r[2]?.timeIn||"",id1:p.r[1]?.id||"",id2:p.r[2]?.id||"",h1:!!p.has[1],h2:!!p.has[2]}});
+}
+const st=p=>p.h1&&p.h2?"both":p.h1?"d1":"d2",label={both:"Both days",d1:"Day 1 only",d2:"Day 2 only"};
+const cell=(tr,...parts)=>{const td=document.createElement("td");parts.forEach(x=>td.append(x));tr.append(td);return td};
+const small=t=>{const s=document.createElement("small");s.textContent=t;return s};
+function view(){const q=$("q").value.toLowerCase().trim();
+  return people().filter(p=>(filter==="all"||st(p)===filter)&&(!q||[p.name,p.email,p.phone,p.id1,p.id2].join(" ").toLowerCase().includes(q)))
+    .sort((a,b)=>(b.t2||b.t1).localeCompare(a.t2||a.t1))}
+function draw(){
+  const P=people(),n=k=>P.filter(p=>k==="all"||st(p)===k).length;
+  $("stats").replaceChildren(...[["all","Checked in at least once"],["both","Both days"],["d1","Day 1 only"],["d2","Day 2 only"]].map(([k,l])=>{
+    const b=document.createElement("button");b.className="stat"+(k==="both"?" both":"")+(filter===k?" on":"");
+    const v=document.createElement("b");v.textContent=n(k);b.append(v,l);b.onclick=()=>{filter=k;draw()};return b}));
+  $("rows").replaceChildren(...view().map(p=>{
+    const tr=document.createElement("tr"),s=st(p),c=document.createElement("span");c.className="chip"+(s==="both"?" b":"");c.textContent=label[s];
+    cell(tr,Object.assign(document.createElement("b"),{textContent:p.name}),small(p.brand));
+    cell(tr,p.email,small(p.phone));
+    cell(tr,p.field,small(p.city));
+    const t=(iso,h)=>{const e=document.createElement("span");e.className="time";e.textContent=iso?fmt(iso):h?"…":"Not checked in";if(!iso&&!h)e.style.opacity=".45";return e};
+    cell(tr,t(p.t1,p.h1),small(p.id1));cell(tr,t(p.t2,p.h2),small(p.id2));cell(tr,c);return tr}));
+}
+const safe=v=>{v=String(v??"");return '"'+(/^[=+\-@]/.test(v)?"'"+v:v).replace(/"/g,'""')+'"'};
+$("csv").onclick=()=>{const L=view().map(p=>[p.name,p.email,p.phone,p.field,p.brand,p.city,fmt(p.t1),fmt(p.t2),label[st(p)],p.id1,p.id2].map(safe).join(","));
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["Name,Email,Phone,Field,Brand,City,Day 1 time in,Day 2 time in,Status,Day 1 ticket,Day 2 ticket\n"+L.join("\n")],{type:"text/csv"}));a.download="bcc-checkins-"+filter+".csv";a.click()};
+$("q").oninput=draw;
+async function start(){
+  $("lerr").textContent="";
+  try{await sync();$("login").style.display="none";$("app").style.display="block";$("out").style.display="";sessionStorage.setItem("bcc_admin",pin);
+    clearInterval(timer);timer=setInterval(()=>sync().catch(()=>{}),30000)}
+  catch(e){pin="";sessionStorage.removeItem("bcc_admin");
+    if($("app").style.display==="block")$("err").textContent="Couldn’t refresh. Check your connection.";
+    else $("lerr").textContent=e.message==="auth"?"Wrong passcode.":"Couldn’t reach the server."}
+}
+$("go").onclick=()=>{pin=$("pin").value;start()};$("pin").addEventListener("keydown",e=>{if(e.key==="Enter")$("go").click()});
+$("refresh").onclick=()=>sync().catch(()=>$("err").textContent="Couldn’t refresh. Check your connection.");
+$("out").onclick=()=>{sessionStorage.removeItem("bcc_admin");location.reload()};
+if(pin)start();
+</script>
+</body>
+</html>
