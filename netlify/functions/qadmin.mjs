@@ -1,4 +1,4 @@
-import { getStore } from "@netlify/blobs";
+import { st } from "../lib/store.mjs";
 import { rebuildWall } from "../lib/wall.mjs";
 
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" } });
@@ -7,7 +7,7 @@ const STATUSES = ["pending", "published", "held", "rejected", "hidden", "answere
 export default async (req) => {
   const pin = process.env.ADMIN_PIN;
   if (!pin || req.headers.get("authorization") !== `Bearer ${pin}`) return json({ error: "Unauthorized" }, 401);
-  const qs = getStore("questions");
+  const qs = st("questions");
 
   if (req.method === "GET") { // every question with its status, newest first
     const keys = [];
@@ -22,8 +22,9 @@ export default async (req) => {
     if (!String(key).startsWith("q/") || !STATUSES.includes(status)) return json({ error: "Bad request" }, 400);
     const rec = await qs.get(key, { type: "json" });
     if (!rec) return json({ error: "Not found" }, 404);
-    await qs.setJSON(key, { ...rec, status, reviewedAt: new Date().toISOString() });
-    await rebuildWall(qs);
+    const updated = { ...rec, status, reviewedAt: new Date().toISOString() };
+    await qs.setJSON(key, updated);
+    await rebuildWall(qs, { key, rec: updated });
     return json({ ok: true });
   }
   return json({ error: "Method not allowed" }, 405);

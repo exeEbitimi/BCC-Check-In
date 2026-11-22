@@ -1,4 +1,4 @@
-import { getStore } from "@netlify/blobs";
+import { st } from "../lib/store.mjs";
 import { check } from "../lib/moderate.mjs";
 
 const MAX_PER_DAY = 8;
@@ -11,14 +11,14 @@ const lagosDate = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Lag
 
 // find the checked-in attendee behind a ticket ID (same data as the check-in site)
 async function attendee(ticket) {
-  const email = await getStore("ticket-index").get(ticket, { type: "text" });
+  const email = await st("ticket-index").get(ticket, { type: "text" });
   if (!email) return null;
-  const checkins = getStore("checkins"), w = encodeURIComponent(email), day = ticket[5] === "2" ? 2 : 1;
+  const checkins = st("checkins"), w = encodeURIComponent(email), day = ticket[5] === "2" ? 2 : 1;
   return (await checkins.get(`d${day}/${w}`, { type: "json" })) || (await checkins.get(`d${day === 1 ? 2 : 1}/${w}`, { type: "json" }));
 }
 
 export default async (req) => {
-  const qs = getStore("questions");
+  const qs = st("questions");
 
   if (req.method === "GET") { // public live wall: only moderator-approved questions
     const wall = await qs.get("wall/live", { type: "json" });

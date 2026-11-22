@@ -56,7 +56,7 @@ td small{display:block;opacity:.7;font-weight:400}
       <button class="btn ghost" id="refresh">Refresh</button><small id="status"></small>
     </div>
     <div class="err" id="err"></div>
-    <div class="tw"><table><thead><tr><th>Question</th><th>For</th><th>Asked by</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="tw"><table><thead><tr><th>Question</th><th>For</th><th>Asked by</th><th>Time</th><th>Status</th><th>Answered</th><th>Actions</th></tr></thead><tbody id="rows"></tbody></table></div>
   </div>
 </main>
 <script>
@@ -93,11 +93,10 @@ function draw(){
     add(q.to);add(q.name,small(q.email));add(fmt(q.at));
     const c=document.createElement("span");c.className="chip"+(["rejected","held","pending"].includes(q.status)?" bad":q.status==="hidden"?" mute":"");c.textContent=label[q.status]||q.status;
     add(c,...(q.reason?[small(q.reason)]:[]));
+    if(q.status==='published'||q.status==='answered'){const k=document.createElement('input');k.type='checkbox';k.checked=q.status==='answered';k.setAttribute('aria-label','Answered');k.style.cssText='width:1.7rem;height:1.7rem;accent-color:#E4002B;cursor:pointer';k.onchange=()=>setStatus(q.key,k.checked?'answered':'published');add(k)}else add('–');
     const a=document.createElement("div");a.className="acts";
     const btn=(t,st,ghost)=>{const b=document.createElement("button");b.className="btn sm"+(ghost?" ghost":"");b.textContent=t;b.onclick=()=>setStatus(q.key,st);a.append(b)};
     if(["pending","held","rejected","hidden"].includes(q.status))btn("Approve and show","published");
-    if(q.status==="published")btn("Mark answered","answered");
-    if(q.status==="answered")btn("Back to live","published",1);
     if(q.status!=="hidden")btn("Hide","hidden",1);
     add(a);return tr}));
 }

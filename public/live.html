@@ -29,8 +29,8 @@ main{padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(3
 .card p{font-weight:800;font-size:clamp(1.25rem,2.2vw,2rem);line-height:1.25}
 .meta{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-weight:700;font-size:1rem}
 .for{background:var(--k);color:var(--y);padding:.1rem .7rem;font-weight:800}
-.card.done{background:#333;color:#ccc;box-shadow:8px 8px 0 #555}.card.done .for{background:#555;color:#fff}
-.tag{background:var(--r);color:var(--w);font-weight:800;font-size:.8rem;padding:.05rem .5rem}
+.card.done{background:var(--w);color:var(--k);box-shadow:8px 8px 0 #1f9d55}.card.done .for{background:var(--k);color:var(--w)}
+.tag{background:#1f9d55;color:var(--w);font-weight:800;font-size:.8rem;padding:.05rem .5rem}
 .empty{grid-column:1/-1;text-align:center;font:800 clamp(1.5rem,3vw,2.4rem) var(--disp);font-stretch:75%;color:var(--y);padding:4rem 1rem}
 @media(prefers-reduced-motion:reduce){.live::before{animation:none}.card.new{animation:none}}
 </style>
@@ -52,7 +52,7 @@ async function pull(){
 function draw(){
   const names=[...new Set(Q.map(q=>q.to))];
   $("chips").replaceChildren(...["",...names].map(n=>{const b=document.createElement("button");b.className="chip"+(filter===n?" on":"");b.textContent=n||"Everyone";b.onclick=()=>{filter=n;draw()};return b}));
-  const rows=Q.filter(q=>!filter||q.to===filter);
+  const rows=Q.filter(q=>!filter||q.to===filter).sort((a,b)=>a.answered-b.answered); // unanswered first, newest first within each group
   $("count").textContent=rows.length+(rows.length===1?" question":" questions");$("count").style.color="#fff";
   const fresh=new Set(seen?Q.filter(q=>!seen.has(q.id)).map(q=>q.id):[]);
   $("wall").replaceChildren(...(rows.length?rows.map(q=>{
@@ -60,7 +60,7 @@ function draw(){
     c.className="card"+(q.answered?" done":"")+(fresh.has(q.id)?" new":"");p.textContent=q.text;m.className="meta";
     const f=document.createElement("span");f.className="for";f.textContent="For "+q.to;
     const a=document.createElement("span");a.textContent=q.name+", "+fmt(q.at);m.append(f,a);
-    if(q.answered){const t=document.createElement("span");t.className="tag";t.textContent="Answered";m.append(t)}
+    if(q.answered){const t=document.createElement("span");t.className="tag";t.textContent="✓ Answered";m.append(t)}
     c.append(p,m);return c}):[Object.assign(document.createElement("div"),{className:"empty",textContent:"Questions will appear here as soon as they’re approved."})]));
   seen=new Set(Q.map(q=>q.id));
 }

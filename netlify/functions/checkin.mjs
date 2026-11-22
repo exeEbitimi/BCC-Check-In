@@ -1,4 +1,4 @@
-import { getStore } from "@netlify/blobs";
+import { st } from "../lib/store.mjs";
 
 const DAYS = { "2026-11-24": 1, "2026-11-25": 2 };
 const lagosDate = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Lagos" }).format(new Date());
@@ -22,8 +22,8 @@ export default async (req) => {
   if (test && (b.day === 1 || b.day === 2)) day = b.day;
   if (!day) return json({ error: "Check-in is only open on 24 and 25 November." }, 403);
 
-  const store = getStore("checkins");        // d1/<email>, d2/<email>
-  const tickets = getStore("ticket-index");  // ticket ID -> email
+  const store = st("checkins");        // d1/<email>, d2/<email>
+  const tickets = st("ticket-index");  // ticket ID -> email
   let d;
 
   if (b.lookup) {

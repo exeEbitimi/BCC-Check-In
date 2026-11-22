@@ -82,10 +82,10 @@ async function sync(){
     $("status").textContent="Loading "+Math.min(i+100,need.length)+" of "+need.length+"…";
     const p=await fetch("/api/admin",{method:"POST",headers:{...hdr(),"Content-Type":"application/json"},body:JSON.stringify({keys:need.slice(i,i+100)})});
     if(!p.ok)throw new Error("net");
-    (await p.json()).records.forEach(x=>recs.set(x.day===1||x.day===2?"d"+x.day+"/"+encodeURIComponent(x.email):"",x));
+    (await p.json()).records.forEach(x=>{if(x.rec)recs.set(x.key,x.rec)});
     draw();
   }
-  $("status").textContent="Updated "+new Date().toLocaleTimeString("en-NG",{timeZone:"Africa/Lagos",hour:"numeric",minute:"2-digit",second:"2-digit"});
+  const miss=keys.filter(k=>!recs.has(k)).length;$("status").textContent=(miss?miss+" registrants’ details still loading, retrying. ":"")+"Updated "+new Date().toLocaleTimeString("en-NG",{timeZone:"Africa/Lagos",hour:"numeric",minute:"2-digit",second:"2-digit"});
 }
 function people(){
   const m=new Map();
