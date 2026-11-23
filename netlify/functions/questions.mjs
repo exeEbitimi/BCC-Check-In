@@ -1,4 +1,5 @@
 import { st, rst } from "../lib/store.mjs";
+import { loadConfig } from "../lib/sessions.mjs";
 import { check } from "../lib/moderate.mjs";
 
 const MAX_PER_DAY = 8, MAX_WORDS = 750;
@@ -23,8 +24,8 @@ export default async (req) => {
   if (req.method === "GET") { // public live wall: only moderator-approved questions
     // ?fresh=1 (live screen, moderators) is never cached; the attendee page may be cached for a few seconds
     const fresh = new URL(req.url).searchParams.has("fresh");
-    const wall = await qs.get("wall/live", { type: "json", consistency: "strong" });
-    return json({ questions: wall?.questions || [], updatedAt: wall?.updatedAt || null }, 200, fresh ? undefined : "public, max-age=5");
+    const [wall, cfg] = await Promise.all([qs.get("wall/live", { type: "json", consistency: "strong" }), loadConfig(qs)]);
+    return json({ questions: wall?.questions || [], updatedAt: wall?.updatedAt || null, sessions: cfg.sessions, activeId: cfg.activeId, day: cfg.day }, 200, fresh ? undefined : "public, max-age=5");
   }
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
@@ -39,10 +40,12 @@ export default async (req) => {
   if (b.action === "mine") {
     const keys = (await qs.get(idxKey, { type: "json" })) || [];
     const recs = await Promise.all(keys.slice(0, 20).map((k) => qs.get(k, { type: "json" })));
-    return json({ questions: recs.filter(Boolean).map((r) => ({ text: r.text, to: r.to, status: r.status, at: r.at })) });
+    return json({ questions: recs.filter(Boolean).map((r) => ({ text: r.text, to: r.to, session: r.session || "", status: r.status, at: r.at })) });
   }
 
-  const text = clean(b.text, 6000), to = clean(b.to, 60) || "Any speaker";
+  const cfg = await loadConfig(qs), sess = cfg.sessions.find((s) => s.id === clean(b.sessionId, 40));
+  if (!sess) return json({ error: "Please choose which session your question is for." }, 400);
+  const text = clean(b.text, 6000), to = clean(b.to, 80) || "The whole panel";
   const words = text.split(" ").filter(Boolean).length;
   if (text.length < 10) return json({ error: "Please write at least 10 characters." }, 400);
   if (words > MAX_WORDS) return json({ error: `Please keep your question to ${MAX_WORDS} words or fewer (yours is ${words}).` }, 400);
@@ -56,7 +59,7 @@ export default async (req) => {
   const status = v.verdict === "ok" ? "pending" : v.verdict === "review" ? "held" : "rejected";
   const rand = [...crypto.getRandomValues(new Uint8Array(3))].map((n) => n.toString(16).padStart(2, "0")).join("");
   const key = `q/${String(9999999999999 - Date.now()).padStart(13, "0")}-${rand}`; // newest sorts first
-  await qs.setJSON(key, { name: a.name, email: a.email, ticket, to, text, status, reason: v.reason, at: new Date().toISOString() });
+  await qs.setJSON(key, { name: a.name, email: a.email, ticket, sessionId: sess.id, session: sess.title, to, text, status, reason: v.reason, at: new Date().toISOString() });
   await qs.set(nKey, String(used + 1));
   const keys = (await qs.get(idxKey, { type: "json" })) || [];
   await qs.setJSON(idxKey, [key, ...keys].slice(0, 30));

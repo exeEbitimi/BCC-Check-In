@@ -10,6 +10,6 @@ export async function rebuildWall(qs, override) {
   }
   const questions = recs
     .filter(({ r }) => r && (r.status === "published" || r.status === "answered"))
-    .map(({ k, r }) => ({ id: k, name: r.name, to: r.to, text: r.text, at: r.at, answered: r.status === "answered" }));
+    .map(({ k, r }) => ({ id: k, name: r.name, to: r.to, sessionId: r.sessionId || "", session: r.session || "", text: r.text, at: r.at, answered: r.status === "answered" }));
   await qs.setJSON("wall/live", { questions, updatedAt: new Date().toISOString() });
 }

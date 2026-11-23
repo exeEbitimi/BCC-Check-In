@@ -80,6 +80,9 @@ input:focus,select:focus{outline:4px solid var(--y);outline-offset:0;border-colo
 .act{display:flex;flex-wrap:wrap;gap:.8rem;padding:0 1.8rem 1.8rem}
 .pass .btn{background:var(--y);color:var(--k);border-color:var(--y)}.pass .btn:hover{background:var(--r);color:var(--w);border-color:var(--r);box-shadow:3px 3px 0 var(--y)}
 .pass .btn.ghost{background:transparent;color:var(--w);border-color:var(--w)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:20;display:flex;align-items:center;justify-content:center;padding:1rem}.modal[hidden]{display:none}
+.mbox{background:var(--w);border:4px solid var(--k);box-shadow:10px 10px 0 var(--y);padding:1.6rem;max-width:460px;animation:pop .4s cubic-bezier(.2,1.5,.4,1)}
+.mbox h3{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:2.6rem;line-height:1;margin-bottom:.6rem}.mbox p{margin-bottom:1.2rem}.mact{display:flex;flex-wrap:wrap;gap:.7rem}.mbox .btn.ghost{color:var(--k)}
 .toast{position:fixed;left:50%;top:1rem;transform:translate(-50%,-170%);z-index:10;background:var(--y);color:var(--k);border:4px solid var(--k);padding:.9rem 1.4rem;font-weight:800;box-shadow:6px 6px 0 var(--r);transition:transform .4s cubic-bezier(.2,1.3,.4,1);max-width:92vw}
 .toast.on{transform:translate(-50%,0)}
 footer{background:var(--k);color:var(--w);padding:2rem 0;border-top:5px solid var(--r);font-size:.95rem}
@@ -89,6 +92,11 @@ footer a{color:var(--y)}
 </style>
 </head>
 <body>
+<div class="modal" id="askModal" role="dialog" aria-modal="true" aria-labelledby="mt" hidden><div class="mbox">
+  <h3 id="mt">You’re checked in!</h3>
+  <p>Have a question for a speaker or panelist? You can send it any time from the <b>Ask a question</b> page. Keep your ticket ID handy.</p>
+  <div class="mact"><a class="btn" id="mAsk" href="/ask">Ask a question</a><button class="btn ghost" id="mClose" type="button">Maybe later</button></div>
+</div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <div class="pub">
@@ -128,7 +136,7 @@ footer a{color:var(--y)}
       <div class="f"><label for="phone">WhatsApp number</label><input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="0810 000 0000" required></div>
       <div class="f"><label for="discipline">Your creative field</label>
         <select id="discipline" name="discipline" required><option value="">Choose one</option>
-        <option>Graphic and brand design</option><option>Film and video</option><option>Photography</option><option>Fashion and textiles</option><option>Music and sound</option><option>Writing and publishing</option><option>Visual art</option><option>Tech and digital</option><option>Events and media</option><option>Other</option></select></div>
+        <option>Film &amp; TV</option><option>Content Creation</option><option>Photography &amp; Cinematography</option><option>Music &amp; Sound</option><option>Visual Arts</option><option>Entertainment</option><option>Graphic and brand design</option><option>Fashion &amp; Beauty</option><option>Writing &amp; Publishing</option><option>Media &amp; Communication</option><option>Food &amp; Culinary</option><option>Technology &amp; Digital Innovation</option><option>Business &amp; Entrepreneurship</option><option>Education &amp; Student</option><option>Events &amp; Hospitality</option><option>Other</option></select></div>
       <div class="f"><label for="brand">Brand or organisation <em>(optional)</em></label><input id="brand" name="brand" autocomplete="organization"></div>
       <div class="f"><label for="city">Town or city</label><input id="city" name="city" placeholder="e.g. Yenagoa" required></div>
       <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -144,7 +152,7 @@ footer a{color:var(--y)}
       </div>
       <p class="msg">Screenshot or save this pass. We’ll scan the code at the door.</p>
       <p class="msg" id="pMail"></p>
-      <div class="act"><button class="btn" id="save" type="button">Save pass</button><a class="btn ghost" href="/ask">Ask a question</a><button class="btn ghost" id="again" type="button">Check in someone else</button></div>
+      <div class="act"><button class="btn" id="save" type="button">Save pass</button><a class="btn ghost" href="/ask">Ask a question</a></div>
     </article>
   </div>
 </div></section>
@@ -194,7 +202,7 @@ function showPass(p,fresh){
   $("pBoth").textContent=p.both?"Checked in both days":"";
   $("pMail").textContent=p.mail?"We’re emailing your check-in details to "+p.mail+". It can take a few minutes, so check your spam folder too.":"";
   qr($("passQr"),"BCC|"+p.id+"|"+p.name,150);
-  if(fresh){toast(p.repeat?"You were already checked in today at "+fmt(p.timeIn)+".":"Check-in complete for Day "+day+". Your pass is ready.");$("pass").scrollIntoView({behavior:"smooth",block:"center"})}
+  if(fresh){toast(p.repeat?"You were already checked in today at "+fmt(p.timeIn)+".":"Check-in complete for Day "+day+". Your pass is ready.");$("pass").scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>{$("askModal").hidden=false;$("mAsk").focus()},900)}
 }
 $("form").addEventListener("submit",async e=>{
   e.preventDefault();const f=e.target,err=$("err");err.textContent="";
@@ -225,8 +233,6 @@ $("lookBtn").onclick=async()=>{
   b.disabled=false;b.textContent="Check me in";
 };
 $("lookup").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("lookBtn").click()}});
-$("again").onclick=()=>{const all=load("bcc_passes")||{};delete all[day];store("bcc_passes",all);try{localStorage.removeItem("bcc_profile")}catch(e){}
-  $("form").reset();$("pass").style.display="none";$("form").style.display="grid";$("quick").style.display="block";$("welcome").style.display="none";$("name").focus()};
 $("save").onclick=()=>{
   const c=document.createElement("canvas");c.width=900;c.height=480;const x=c.getContext("2d");
   x.fillStyle="#000";x.fillRect(0,0,900,480);
@@ -241,6 +247,7 @@ $("save").onclick=()=>{
   x.fillStyle="#fff";x.fillRect(600,150,260,260);x.drawImage($("passQr").querySelector("canvas"),615,165,230,230);
   const a=document.createElement("a");a.href=c.toDataURL("image/png");a.download=$("pId").textContent+"-pass.png";a.click();
 };
+$("mClose").onclick=()=>{$("askModal").hidden=true};addEventListener("keydown",e=>{if(e.key==="Escape")$("askModal").hidden=true});
 fetch("/api/checkin",{cache:"no-store"}).then(r=>r.json()).then(j=>setup(j.today,j.testMode))
   .catch(()=>setup(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date()),location.protocol==="file:"));
 </script>

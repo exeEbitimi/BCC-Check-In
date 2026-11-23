@@ -25,15 +25,15 @@ body{font-family:var(--body);color:var(--k);background:var(--w);line-height:1.55
 .hero small{display:block;font-weight:800;font-size:1.1rem}
 h1{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:clamp(4.2rem,17vw,11rem);line-height:.84;letter-spacing:-.02em;margin:.5rem 0 1.4rem}
 h1 span{color:var(--w);-webkit-text-stroke:3px var(--k);paint-order:stroke fill}
-.lede{font-size:1.2rem;max-width:44ch;font-weight:500}
+.lede{font-size:1.2rem;max-width:46ch;font-weight:500}
 .band{height:14px;background:repeating-linear-gradient(-45deg,var(--y) 0 14px,var(--k) 14px 28px)}
 main .wrap{display:grid;grid-template-columns:5fr 7fr;gap:3.5rem;padding:3.5rem 0 5rem;align-items:start}
 h2{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:2.6rem;line-height:1;margin-bottom:1rem}
 .card{border:4px solid var(--k);padding:1.3rem;box-shadow:8px 8px 0 var(--y)}
 .f{display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem}
-label{font-weight:800;font-size:.95rem}label em{font-weight:400;font-style:normal;opacity:.65}
+label{font-weight:800;font-size:.95rem}
 input,select,textarea{font:inherit;color:var(--k);background:var(--w);border:3px solid var(--k);padding:.75rem .9rem;width:100%;border-radius:0}
-textarea{min-height:8rem;resize:vertical}
+textarea{min-height:9rem;resize:vertical}
 input:focus,select:focus,textarea:focus{outline:4px solid var(--y);border-color:var(--r)}
 .row{display:flex;gap:.6rem}.row .btn{white-space:nowrap}
 .err{color:var(--r);font-weight:800;min-height:1.4em;margin:.4rem 0}
@@ -41,18 +41,23 @@ input:focus,select:focus,textarea:focus{outline:4px solid var(--y);border-color:
 .who{background:var(--y);padding:.6rem .9rem;font-weight:800;margin-bottom:1.1rem;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 .rules{margin-top:1.1rem;font-size:.92rem;border-left:5px solid var(--r);padding-left:.8rem}
 #ask{display:none}
-.head{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}.head h2{margin:0}.head select{width:auto;min-width:200px}
+.now{display:none;background:var(--k);color:var(--w);padding:.9rem 1.1rem;margin-bottom:1.2rem;border-left:8px solid var(--r)}
+.now b{color:var(--y);font-family:var(--disp);font-stretch:75%;font-size:1.5rem;display:block;line-height:1.1}
+.live{display:inline-flex;align-items:center;gap:.4rem;background:var(--r);color:var(--w);font:800 .8rem var(--body);padding:.15rem .6rem;vertical-align:middle}.live::before{content:"";width:.5rem;height:.5rem;border-radius:50%;background:var(--w);animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+#mine{margin-top:1.4rem}#mine h3{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:1.5rem;margin-bottom:.4rem}#mine li{list-style:none;border-top:2px solid var(--k);padding:.5rem 0;font-size:.95rem}#mine li b{display:block}#mine .st{background:var(--y);font-weight:800;font-size:.8rem;padding:.05rem .5rem}
+.head{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}.head h2{margin:0}.head select{width:auto;min-width:220px;max-width:100%}
 table{border-collapse:collapse;width:100%}
 th,td{text-align:left;padding:.75rem .8rem;border-bottom:2px solid var(--k);vertical-align:top}
 th{background:var(--k);color:var(--y)}
-td.q{font-weight:700;width:46%;word-break:break-word}tr.done,tr.done td{background:#e4e4e4}.chip{background:var(--y);font-weight:800;padding:.05rem .5rem;font-size:.8rem;margin-left:.4rem}
-.live{display:inline-flex;align-items:center;gap:.4rem;background:var(--r);color:var(--w);font:800 .8rem var(--body);padding:.15rem .6rem;vertical-align:middle}.live::before{content:"";width:.5rem;height:.5rem;border-radius:50%;background:var(--w);animation:blink 1.2s steps(2) infinite}@keyframes blink{50%{opacity:0}}
-#mine{margin-top:1.4rem}#mine h3{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:1.5rem;margin-bottom:.4rem}#mine li{list-style:none;border-top:2px solid var(--k);padding:.5rem 0;font-size:.95rem}#mine li b{display:block}#mine .st{background:var(--y);font-weight:800;font-size:.8rem;padding:.05rem .5rem}.empty{padding:1.4rem;border:3px dashed var(--k);font-weight:700;display:none}
+td.q{font-weight:700;width:40%;word-break:break-word}tr.done,tr.done td{background:#e4e4e4}
+.chip{background:var(--y);font-weight:800;padding:.05rem .5rem;font-size:.8rem;margin-left:.4rem}
+.empty{padding:1.4rem;border:3px dashed var(--k);font-weight:700;display:none}
 .toast{position:fixed;left:50%;top:1rem;transform:translate(-50%,-170%);z-index:10;background:var(--y);color:var(--k);border:4px solid var(--k);padding:.9rem 1.4rem;font-weight:800;box-shadow:6px 6px 0 var(--r);transition:transform .4s cubic-bezier(.2,1.3,.4,1);max-width:92vw}
 .toast.on{transform:translate(-50%,0)}
 @media(max-width:860px){main .wrap{grid-template-columns:1fr;gap:2.5rem}}
 @media(max-width:700px){thead{display:none}tr{display:block;border-bottom:3px solid var(--k);padding:.6rem 0}td{display:block;border:0;padding:.15rem .2rem;width:auto!important}td::before{content:attr(data-l);font-weight:800;margin-right:.4rem;opacity:.6;font-size:.85rem}td.q::before{display:none}td.q{font-size:1.1rem}}
-@media(prefers-reduced-motion:reduce){.live::before{animation:none}.toast{transition:none}.btn{transition:none}}
+@media(prefers-reduced-motion:reduce){.live::before{animation:none}.toast,.btn{transition:none}}
 </style>
 </head>
 <body>
@@ -61,7 +66,7 @@ td.q{font-weight:700;width:46%;word-break:break-word}tr.done,tr.done td{backgrou
 <section class="hero"><div class="wrap">
   <small>BCC 3.0 live Q&amp;A</small>
   <h1>Ask <span>away</span></h1>
-  <p class="lede">Send your question to a speaker. You need your ticket ID from check-in, and a moderator approves every question before it goes live.</p>
+  <p class="lede">Pick a session, choose who your question is for, and send it. You need your ticket ID from check-in, and a moderator approves every question before it goes live.</p>
 </div></section>
 <div class="band" aria-hidden="true"></div>
 
@@ -77,8 +82,9 @@ td.q{font-weight:700;width:46%;word-break:break-word}tr.done,tr.done td{backgrou
       </div>
       <div id="ask">
         <div class="who"><span>Asking as <span id="who"></span></span><button class="link" id="swap" type="button">Not you?</button></div>
+        <div class="f"><label for="sess">Session</label><select id="sess"></select></div>
         <div class="f"><label for="to">Who is it for?</label><select id="to"></select></div>
-        <div class="f"><label for="text">Your question</label><textarea id="text" maxlength="6000" placeholder="Ask something specific so the speaker can answer it well."></textarea><div class="cnt" id="cnt">0 / 750 words</div></div>
+        <div class="f"><label for="text">Your question</label><textarea id="text" maxlength="6000" placeholder="Ask something specific so they can answer it well."></textarea><div class="cnt" id="cnt">0 / 750 words</div></div>
         <div class="err" id="err" role="alert"></div>
         <button class="btn" id="send" type="button">Send question</button>
         <div id="mine"></div>
@@ -86,30 +92,43 @@ td.q{font-weight:700;width:46%;word-break:break-word}tr.done,tr.done td{backgrou
       <p class="rules">Keep it respectful. Abusive language is filtered out, and a moderator approves every question before it appears. Up to 8 questions a day.</p>
     </div>
   </div>
-
   <div>
-    <div class="head"><h2>Live questions <span class="live">Live</span></h2>
-      <select id="filter" aria-label="Filter by who the question is for"></select></div>
-    <div class="empty" id="empty">No questions yet. Be the first to ask.</div>
-    <table id="tbl"><thead><tr><th>Question</th><th>For</th><th>Asked by</th><th>Time</th></tr></thead><tbody id="rows"></tbody></table>
+    <div class="now" id="now"></div>
+    <div class="head"><h2>Live questions <span class="live">Live</span></h2><select id="filter" aria-label="Filter by session"></select></div>
+    <div class="empty" id="empty">No questions yet for this session. Be the first to ask.</div>
+    <table id="tbl"><thead><tr><th>Question</th><th>Session</th><th>For</th><th>Asked by</th><th>Time</th></tr></thead><tbody id="rows"></tbody></table>
   </div>
 </div></main>
 
 <script>
-const SPEAKERS=["Any speaker","Uju Okoli","Nasboi","Gordons","Wizard Chan","Mera Owili","Emma Eco (Convener)"]; // edit to match the final line-up
 const $=id=>document.getElementById(id);
 const load=k=>{try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}};
 const fmt=iso=>new Date(iso).toLocaleTimeString("en-NG",{timeZone:"Africa/Lagos",hour:"numeric",minute:"2-digit"});
+const wc=s=>s.trim().split(/\s+/).filter(Boolean).length;
 let tt;function toast(m){const e=$("toast");e.textContent=m;e.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>e.classList.remove("on"),6000)}
-SPEAKERS.forEach(s=>{$("to").add(new Option(s,s))});
-$("filter").add(new Option("Everyone’s questions",""));SPEAKERS.forEach(s=>$("filter").add(new Option("For: "+s,s)));
+let SESS=[],ACTIVE=null,DAY=null,Q=[],ticket="",chosen=false,fchosen=false;
+const GROUPS={panel:"Panels",interview:"One-on-one interviews",speaker:"Speakers"};
 
-let ticket="";
+function buildSessions(){
+  const sel=$("sess"),cur=sel.value;sel.replaceChildren();
+  for(const t of Object.keys(GROUPS)){const g=document.createElement("optgroup");g.label=GROUPS[t];
+    SESS.filter(s=>s.type===t).forEach(s=>g.append(new Option(s.title+(s.id===ACTIVE?" (live now)":""),s.id)));if(g.children.length)sel.append(g)}
+  sel.value=chosen&&SESS.some(s=>s.id===cur)?cur:(ACTIVE||SESS[0]?.id||"");buildFor();
+  const f=$("filter"),fc=f.value;f.replaceChildren(new Option("All sessions",""),...SESS.map(s=>new Option(s.title+(s.id===ACTIVE?" (live now)":""),s.id)));
+  f.value=fchosen&&(fc===""||SESS.some(s=>s.id===fc))?fc:(ACTIVE||"");
+}
+function buildFor(){
+  const s=SESS.find(x=>x.id===$("sess").value),to=$("to"),cur=to.value;to.replaceChildren();if(!s)return;
+  if(s.type==="panel")to.add(new Option("The whole panel","The whole panel"));
+  s.panelists.forEach(p=>to.add(new Option(p,p)));if([...to.options].some(o=>o.value===cur))to.value=cur;
+}
+$("sess").onchange=()=>{chosen=true;buildFor()};$("filter").onchange=()=>{fchosen=true;draw()};
+
 async function api(body){const r=await fetch("/api/questions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});return{ok:r.ok,j:await r.json().catch(()=>({}))}}
 async function verify(t,auto){
   $("verr").textContent="";const b=$("vbtn");b.disabled=true;
   try{const{ok,j}=await api({action:"verify",ticket:t});
-    if(!ok){if(!auto)$("verr").textContent=j.error||"Something went wrong.";}
+    if(!ok){if(!auto)$("verr").textContent=j.error||"Something went wrong."}
     else{ticket=t.toUpperCase();try{localStorage.setItem("bcc_ticket",ticket)}catch(e){}$("who").textContent=j.name;$("verify").style.display="none";$("ask").style.display="block";mine()}
   }catch(e){if(!auto)$("verr").textContent="We couldn’t reach the server. Check your connection."}
   b.disabled=false;
@@ -117,43 +136,45 @@ async function verify(t,auto){
 $("vbtn").onclick=()=>{const t=$("ticket").value.trim();if(!t){$("verr").textContent="Enter your ticket ID.";return}verify(t,false)};
 $("ticket").addEventListener("keydown",e=>{if(e.key==="Enter")$("vbtn").click()});
 $("swap").onclick=()=>{try{localStorage.removeItem("bcc_ticket")}catch(e){}ticket="";$("ask").style.display="none";$("verify").style.display="block";$("ticket").value="";$("ticket").focus()};
-const wc=s=>s.trim().split(/\s+/).filter(Boolean).length;
 $("text").oninput=()=>{const n=wc($("text").value);$("cnt").textContent=n+" / 750 words";$("cnt").style.color=n>750?"#E4002B":""};
 
 $("send").onclick=async()=>{
   const err=$("err"),b=$("send"),text=$("text").value.trim();err.textContent="";
+  if(!$("sess").value){err.textContent="Please choose a session.";return}
   if(text.length<10){err.textContent="Please write at least 10 characters.";return}
   if(wc(text)>750){err.textContent="Please keep your question to 750 words or fewer.";return}
   b.disabled=true;b.textContent="Sending…";
-  try{const{ok,j}=await api({ticket,to:$("to").value,text});
+  try{const{ok,j}=await api({ticket,sessionId:$("sess").value,to:$("to").value,text});
     if(!ok)err.textContent=j.error||"Something went wrong. Please try again.";
-    else{$("text").value="";$("cnt").textContent="0 / 750 words";
-      toast("Thanks! Your question is with the moderators and will appear once approved.");mine()}
+    else{$("text").value="";$("cnt").textContent="0 / 750 words";toast("Thanks! Your question is with the moderators and will appear once approved.");mine()}
   }catch(e){err.textContent="We couldn’t reach the server. Check your connection and try again."}
   b.disabled=false;b.textContent="Send question";
 };
 
-let Q=[];
-async function list(){
-  try{const r=await fetch("/api/questions",{cache:"no-store"});Q=(await r.json()).questions||[];draw()}catch(e){}
-}
-function draw(){
-  const f=$("filter").value,rows=Q.filter(q=>!f||q.to===f);
-  $("empty").style.display=rows.length?"none":"block";$("tbl").style.display=rows.length?"table":"none";
-  $("rows").replaceChildren(...rows.map(q=>{
-    const tr=document.createElement("tr");
-    const add=(l,v,c)=>{const td=document.createElement("td");td.dataset.l=l;if(c)td.className=c;td.append(v);tr.append(td);return td};
-    if(q.answered)tr.className="done";const t=add("",q.text,"q");if(q.answered){const c=document.createElement("span");c.className="chip";c.textContent="✓ Answered";t.append(c)}
-    add("For: ",q.to);add("Asked by: ",q.name);add("",fmt(q.at));return tr}));
-}
-$("filter").onchange=draw;
 const MST={pending:"Awaiting approval",held:"Awaiting approval",published:"Live",answered:"Answered",hidden:"Not shown",rejected:"Blocked (language)"};
 async function mine(){
   if(!ticket)return;
   try{const{ok,j}=await api({action:"mine",ticket});if(!ok)return;const m=j.questions||[];
     $("mine").replaceChildren(...(m.length?[Object.assign(document.createElement("h3"),{textContent:"Your questions"}),...m.map(q=>{
-      const li=document.createElement("li"),b=document.createElement("b"),s=document.createElement("span");b.textContent=q.text;s.className="st";s.textContent=MST[q.status]||q.status;li.append(b,"For "+q.to+" ",s);return li})]:[]))
+      const li=document.createElement("li"),b=document.createElement("b"),s=document.createElement("span");b.textContent=q.text;s.className="st";s.textContent=MST[q.status]||q.status;
+      li.append(b,(q.session?q.session+", ":"")+"for "+q.to+" ",s);return li})]:[]))
   }catch(e){}
+}
+async function list(){
+  try{const r=await fetch("/api/questions",{cache:"no-store"});const j=await r.json();
+    const before=JSON.stringify(SESS.map(s=>s.id+s.title+s.panelists)+ACTIVE);SESS=j.sessions||[];ACTIVE=j.activeId;DAY=j.day;Q=j.questions||[];
+    if(!$("sess").options.length||before!==JSON.stringify(SESS.map(s=>s.id+s.title+s.panelists)+ACTIVE))buildSessions();draw()}catch(e){}
+}
+function draw(){
+  const s=SESS.find(x=>x.id===ACTIVE);$("now").style.display=s?"block":"none";
+  if(s)$("now").replaceChildren("Live now"+(DAY?", Day "+DAY:""),Object.assign(document.createElement("b"),{textContent:s.title}),...(s.panelists.length?[s.panelists.join(", ")]:[]));
+  const f=$("filter").value,rows=Q.filter(q=>!f||q.sessionId===f);
+  $("empty").style.display=rows.length?"none":"block";$("tbl").style.display=rows.length?"table":"none";
+  $("rows").replaceChildren(...rows.map(q=>{
+    const tr=document.createElement("tr"),add=(l,v,c)=>{const td=document.createElement("td");td.dataset.l=l;if(c)td.className=c;td.append(v);tr.append(td);return td};
+    if(q.answered)tr.className="done";
+    const t=add("",q.text,"q");if(q.answered){const c=document.createElement("span");c.className="chip";c.textContent="✓ Answered";t.append(c)}
+    add("Session: ",q.session||"-");add("For: ",q.to);add("Asked by: ",q.name);add("",fmt(q.at));return tr}));
 }
 list();setInterval(()=>{if(!document.hidden)list()},10000);setInterval(()=>{if(ticket&&!document.hidden)mine()},15000);
 const saved=localStorage.getItem("bcc_ticket")||((l=>l&&(l[2]||l[1]))(load("bcc_passes"))||{}).id;

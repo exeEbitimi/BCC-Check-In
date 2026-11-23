@@ -13,15 +13,21 @@
 *{box-sizing:border-box;margin:0}
 body{font-family:var(--body);background:var(--k);color:var(--w);min-height:100vh}
 :focus-visible{outline:4px solid var(--y);outline-offset:3px}
-header{position:sticky;top:0;z-index:5;background:var(--k);border-bottom:5px solid var(--r);padding:.6rem 1.5rem;display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap}
+header{background:var(--k);border-bottom:5px solid var(--r);padding:.6rem 1.5rem;display:flex;align-items:center;gap:1.1rem;flex-wrap:wrap}
 header img{width:64px;height:64px}
 h1{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:clamp(1.8rem,4vw,3rem);color:var(--y);line-height:1}
 .live{display:inline-flex;align-items:center;gap:.4rem;background:var(--r);font:800 .85rem var(--body);padding:.2rem .7rem}
 .live::before{content:"";width:.55rem;height:.55rem;border-radius:50%;background:var(--w);animation:blink 1.2s steps(2) infinite}
 @keyframes blink{50%{opacity:0}}
-.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-left:auto}
-.chip,.fs{font:800 .95rem var(--body);background:transparent;color:var(--y);border:3px solid var(--y);padding:.35rem .9rem;cursor:pointer}
-.chip.on,.chip:hover,.fs:hover{background:var(--y);color:var(--k)}
+.day{background:var(--y);color:var(--k);font:800 1.1rem var(--body);padding:.25rem .9rem}
+.fs{margin-left:auto;font:800 .95rem var(--body);background:transparent;color:var(--y);border:3px solid var(--y);padding:.35rem .9rem;cursor:pointer}
+.fs:hover,.chip.on,.chip:hover{background:var(--y);color:var(--k)}
+.session{padding:1.4rem 1.5rem 1rem;border-bottom:2px solid #333}
+.session h2{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:clamp(2.2rem,5vw,4.2rem);line-height:1;color:var(--y)}
+.session p{font-size:clamp(1rem,1.8vw,1.4rem);font-weight:500;margin-top:.4rem;max-width:70ch}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem}
+.chip{font:800 .95rem var(--body);background:transparent;color:var(--w);border:3px solid var(--w);padding:.3rem .9rem;cursor:pointer}
+.chip.on{border-color:var(--y)}
 main{padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.4rem}
 .card{background:var(--y);color:var(--k);padding:1.3rem 1.4rem;display:flex;flex-direction:column;gap:1rem;justify-content:space-between;box-shadow:8px 8px 0 var(--r)}
 .card.new{animation:in .6s cubic-bezier(.2,1.4,.4,1);outline:6px solid var(--w)}
@@ -39,31 +45,37 @@ main{padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(3
 <body>
 <header>
   <img src="bcc-logo.webp" alt="Bayelsa Creatives Converge">
-  <h1>Live questions</h1><span class="live">Live</span><span id="count" aria-live="polite"></span><small id="upd" style="opacity:.6"></small>
-  <div class="chips" id="chips"></div><button class="fs" id="fs" type="button">Full screen</button>
+  <h1>Live questions</h1><span class="live">Live</span><span class="day" id="day" style="display:none"></span><small id="upd" style="opacity:.6"></small>
+  <button class="fs" id="fs" type="button">Full screen</button>
 </header>
+<section class="session" id="session"></section>
 <main id="wall"></main>
 <script>
 const $=id=>document.getElementById(id);
 const fmt=iso=>new Date(iso).toLocaleTimeString("en-NG",{timeZone:"Africa/Lagos",hour:"numeric",minute:"2-digit"});
-let Q=[],seen=null,filter=new URLSearchParams(location.search).get("for")||"";
+const DAYS={1:"Tuesday 24 November 2026",2:"Wednesday 25 November 2026"};
+let J={questions:[],sessions:[],activeId:null,day:null},seen=null,filter="",lastSession=null;
 async function pull(){
-  try{const r=await fetch("/api/questions?fresh=1&t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const j=await r.json();Q=j.questions||[];$("upd").textContent=j.updatedAt?"Updated "+new Date(j.updatedAt).toLocaleTimeString("en-NG",{timeZone:"Africa/Lagos",hour:"numeric",minute:"2-digit",second:"2-digit"}):"";draw()}catch(e){}
+  try{const r=await fetch("/api/questions?fresh=1&t="+Date.now(),{cache:"no-store"});if(!r.ok)return;J=await r.json();
+    $("upd").textContent=J.updatedAt?"Updated "+new Date(J.updatedAt).toLocaleTimeString("en-NG",{timeZone:"Africa/Lagos",hour:"numeric",minute:"2-digit",second:"2-digit"}):"";draw()}catch(e){}
 }
+function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
 function draw(){
-  const names=[...new Set(Q.map(q=>q.to))];
-  $("chips").replaceChildren(...["",...names].map(n=>{const b=document.createElement("button");b.className="chip"+(filter===n?" on":"");b.textContent=n||"Everyone";b.onclick=()=>{filter=n;draw()};return b}));
-  const rows=Q.filter(q=>!filter||q.to===filter).sort((a,b)=>a.answered-b.answered); // unanswered first, newest first within each group
-  $("count").textContent=rows.length+(rows.length===1?" question":" questions");$("count").style.color="#fff";
-  const fresh=new Set(seen?Q.filter(q=>!seen.has(q.id)).map(q=>q.id):[]);
+  const s=J.sessions.find(x=>x.id===J.activeId);
+  $("day").style.display=s&&J.day?"inline-block":"none";if(J.day)$("day").textContent="Day "+J.day+", "+DAYS[J.day];
+  if(!s){lastSession=null;$("session").replaceChildren(el("h2","","No session is live yet"));$("wall").replaceChildren(el("div","empty","The next session’s questions will appear here."));return}
+  if(lastSession!==s.id){lastSession=s.id;filter="";seen=null}
+  const names=s.type==="panel"?["","The whole panel",...s.panelists]:[""];
+  const chips=el("div","chips");
+  names.forEach(n=>{if(s.type!=="panel")return;const b=el("button","chip"+(filter===n?" on":""),n||"Everyone");b.onclick=()=>{filter=n;draw()};chips.append(b)});
+  $("session").replaceChildren(el("h2","",s.title),...(s.subtitle?[el("p","",s.subtitle)]:[]),...(s.panelists.length?[el("p","",(s.type==="panel"?"Panelists: ":s.type==="interview"?"In conversation with ":"Speaker: ")+s.panelists.join(", "))]:[]),...(s.type==="panel"?[chips]:[]));
+  const mine=J.questions.filter(q=>q.sessionId===s.id),rows=mine.filter(q=>!filter||q.to===filter).sort((a,b)=>a.answered-b.answered);
+  const fresh=new Set(seen?mine.filter(q=>!seen.has(q.id)).map(q=>q.id):[]);
   $("wall").replaceChildren(...(rows.length?rows.map(q=>{
-    const c=document.createElement("article"),p=document.createElement("p"),m=document.createElement("div");
-    c.className="card"+(q.answered?" done":"")+(fresh.has(q.id)?" new":"")+(q.text.length>350?" long":"");p.textContent=q.text;m.className="meta";
-    const f=document.createElement("span");f.className="for";f.textContent="For "+q.to;
-    const a=document.createElement("span");a.textContent=q.name+", "+fmt(q.at);m.append(f,a);
-    if(q.answered){const t=document.createElement("span");t.className="tag";t.textContent="✓ Answered";m.append(t)}
-    c.append(p,m);return c}):[Object.assign(document.createElement("div"),{className:"empty",textContent:"Questions will appear here as soon as they’re approved."})]));
-  seen=new Set(Q.map(q=>q.id));
+    const c=el("article","card"+(q.answered?" done":"")+(fresh.has(q.id)?" new":"")+(q.text.length>350?" long":"")),m=el("div","meta");
+    m.append(el("span","for","For "+q.to),el("span","",q.name+", "+fmt(q.at)));if(q.answered)m.append(el("span","tag","✓ Answered"));
+    c.append(el("p","",q.text),m);return c}):[el("div","empty","Questions for this session will appear here as soon as they’re approved.")]));
+  seen=new Set(mine.map(q=>q.id));
 }
 $("fs").onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
 pull();setInterval(pull,4000);

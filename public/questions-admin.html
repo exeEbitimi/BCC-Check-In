@@ -12,32 +12,45 @@
 *{box-sizing:border-box;margin:0}
 body{font-family:var(--body);color:var(--k);background:var(--w);line-height:1.5}
 :focus-visible{outline:4px solid var(--r);outline-offset:3px}
-.wrap{width:min(1240px,100% - 2rem);margin-inline:auto}
+.wrap{width:min(1280px,100% - 2rem);margin-inline:auto}
 .bar{background:var(--k);color:var(--y);padding:.5rem 0;border-bottom:5px solid var(--r)}
-.bar .wrap{display:flex;align-items:center;gap:1rem}.bar img{width:64px;height:64px}
+.bar .wrap{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}.bar img{width:64px;height:64px}
 .bar b{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:1.8rem;flex:1}
 .btn{display:inline-block;text-decoration:none;font:800 1rem var(--body);background:var(--k);color:var(--y);border:3px solid var(--k);padding:.6rem 1.1rem;cursor:pointer}
 .btn:hover{background:var(--r);border-color:var(--r);color:var(--w)}
-.btn.ghost{background:transparent;color:inherit;border-color:currentColor}
+.btn.ghost{background:transparent;color:inherit;border-color:currentColor}.btn.ghost:hover{color:var(--w)}
 .btn.sm{padding:.3rem .7rem;font-size:.9rem}
 .bar .btn{background:var(--y);color:var(--k);border-color:var(--y)}
 main{padding:2rem 0 4rem}
 h2{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:3rem;line-height:1;margin-bottom:1rem}
-input,select{font:inherit;border:3px solid var(--k);padding:.65rem .8rem;border-radius:0;background:var(--w)}
-input:focus,select:focus{outline:4px solid var(--y);border-color:var(--r)}
-#login{max-width:420px;padding-top:2rem}#login .row{display:flex;gap:.6rem;margin-top:.4rem}#login input{width:100%}
+h3{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:1.8rem;line-height:1}
+input,select,textarea{font:inherit;border:3px solid var(--k);padding:.65rem .8rem;border-radius:0;background:var(--w);width:100%}
+input:focus,select:focus,textarea:focus{outline:4px solid var(--y);border-color:var(--r)}
+#login{max-width:420px;padding-top:2rem}#login .row{display:flex;gap:.6rem;margin-top:.4rem}
 .err{color:var(--r);font-weight:800;min-height:1.4em;margin-top:.5rem}
 #app{display:none}
+.sessbox{border:4px solid var(--k);padding:1.2rem;margin-bottom:2rem;box-shadow:8px 8px 0 var(--y)}
+.sh{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem;margin-bottom:.8rem}.sh .sp{flex:1}.sh select{width:auto}
+.sh label{font-weight:800}
+.grp{font-weight:800;margin:1rem 0 .3rem;opacity:.7;font-size:.9rem}
+.srow{display:flex;gap:.8rem;align-items:center;padding:.5rem .6rem;border-bottom:2px solid #ddd;flex-wrap:wrap}
+.srow.on{background:var(--y);border-bottom-color:var(--k)}
+.srow .t{flex:1;min-width:240px}.srow .t b{display:block}.srow .t small{opacity:.75}
+.live{background:var(--r);color:var(--w);font-weight:800;font-size:.8rem;padding:.05rem .5rem;margin-right:.4rem}
+#sessEdit{display:none;border-top:4px solid var(--k);margin-top:1rem;padding-top:1rem}
+#sessEdit .g{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}#sessEdit .w{grid-column:1/-1}
+#sessEdit label{font-weight:800;font-size:.9rem;display:block;margin-bottom:.2rem}
 .tabs{display:flex;flex-wrap:wrap;gap:.8rem;margin:1rem 0 1.2rem}
 .tab{border:4px solid var(--k);padding:.6rem 1rem;background:var(--w);font:inherit;font-weight:800;cursor:pointer;text-align:left}
 .tab b{font-family:var(--disp);font-size:1.8rem;font-stretch:75%;margin-right:.4rem}.tab.on{background:var(--y);box-shadow:5px 5px 0 var(--k)}.tab.review b{color:var(--r)}
-.tools{display:flex;flex-wrap:wrap;gap:.7rem;align-items:center;margin-bottom:1rem}.tools input{min-width:260px}.tools small{margin-left:auto;font-weight:700}
-.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:900px}
+.tools{display:flex;flex-wrap:wrap;gap:.7rem;align-items:center;margin-bottom:1rem}.tools input{min-width:240px;width:auto}.tools select{width:auto;max-width:260px}.tools small{margin-left:auto;font-weight:700}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:1000px}
 th,td{text-align:left;padding:.65rem .8rem;border-bottom:2px solid var(--k);vertical-align:top}
-th{background:var(--k);color:var(--y)}td.q{font-weight:700;max-width:420px}
+th{background:var(--k);color:var(--y)}td.q{font-weight:700;max-width:420px;word-break:break-word}
 td small{display:block;opacity:.7;font-weight:400}
 .chip{font-weight:800;padding:.1rem .6rem;background:var(--y);white-space:nowrap}.chip.bad{background:var(--r);color:var(--w)}.chip.mute{background:#ddd}
 .acts{display:flex;flex-wrap:wrap;gap:.4rem}
+@media(max-width:700px){#sessEdit .g{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -48,31 +61,86 @@ td small{display:block;opacity:.7;font-weight:400}
     <div class="row"><input id="pin" type="password" autocomplete="current-password"><button class="btn" id="go">Open</button></div>
     <div class="err" id="lerr" role="alert"></div></div>
   <div id="app">
+    <div class="sessbox">
+      <div class="sh"><h3>Sessions</h3><span class="sp"></span>
+        <label for="dayPick">Live day</label><select id="dayPick"><option value="1">Day 1, Tue 24 Nov</option><option value="2">Day 2, Wed 25 Nov</option></select>
+        <button class="btn sm ghost" id="endSess">End live session</button><button class="btn sm" id="addSess">Add session</button></div>
+      <p style="font-size:.95rem">Press <b>Go live</b> on the session in progress. Its panelists and approved questions show on the live screen, and attendees see it marked as live.</p>
+      <div id="sessList"></div>
+      <div id="sessEdit"></div>
+    </div>
     <h2>Questions</h2>
     <div class="tabs" id="tabs"></div>
     <div class="tools">
       <input id="q" type="search" placeholder="Search question or name" aria-label="Search">
-      <select id="for" aria-label="Filter by who it is for"><option value="">All speakers</option></select>
+      <select id="sf" aria-label="Filter by session"><option value="">All sessions</option></select>
+      <select id="for" aria-label="Filter by who it is for"><option value="">Everyone asked</option></select>
       <button class="btn ghost" id="refresh">Refresh</button><small id="status"></small>
     </div>
     <div class="err" id="err"></div>
-    <div class="tw"><table><thead><tr><th>Question</th><th>For</th><th>Asked by</th><th>Time</th><th>Status</th><th>Answered</th><th>Actions</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="tw"><table><thead><tr><th>Question</th><th>Session</th><th>For</th><th>Asked by</th><th>Time</th><th>Status</th><th>Answered</th><th>Actions</th></tr></thead><tbody id="rows"></tbody></table></div>
   </div>
 </main>
 <script>
 const $=id=>document.getElementById(id);
-let pin=sessionStorage.getItem("bcc_admin")||"",tab="review",Q=[],timer;
+let pin=sessionStorage.getItem("bcc_admin")||"",tab="review",Q=[],S=[],ACT=null,timer,dayTouched=false,editing=null;
 const hdr=()=>({Authorization:"Bearer "+pin,"Content-Type":"application/json"});
 const fmt=iso=>new Date(iso).toLocaleString("en-NG",{timeZone:"Africa/Lagos",day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e};
+const todayDay=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())>="2026-11-25"?2:1;$("dayPick").value=todayDay;
+$("dayPick").onchange=()=>{dayTouched=true};
 const TABS=[["review","Needs review",q=>["pending","held","rejected"].includes(q.status)],["published","Live",q=>q.status==="published"],["answered","Answered",q=>q.status==="answered"],["hidden","Hidden",q=>q.status==="hidden"],["all","All",()=>true]];
 const label={pending:"Awaiting approval",published:"Live",held:"Held for review",rejected:"Blocked by filter",hidden:"Hidden",answered:"Answered"};
+const GROUPS={panel:"Panels",interview:"One-on-one interviews",speaker:"Speakers"};
 
+/* ---------- sessions ---------- */
+async function sessCall(body){
+  const r=await fetch("/api/sessadmin",body?{method:"POST",headers:hdr(),body:JSON.stringify(body)}:{headers:hdr(),cache:"no-store"});
+  if(r.status===401)throw new Error("auth");if(!r.ok){$("err").textContent="Couldn’t update sessions.";return false}
+  const j=await r.json();S=j.sessions;ACT=j.activeId;if(j.day&&!dayTouched)$("dayPick").value=j.day;drawSess();fillFilters();return true;
+}
+function drawSess(){
+  const out=[];
+  for(const t of Object.keys(GROUPS)){const list=S.filter(s=>s.type===t);if(!list.length)continue;out.push(el("div","grp",GROUPS[t]));
+    list.forEach(s=>{const row=el("div","srow"+(s.id===ACT?" on":"")),tx=el("div","t"),b=el("b");
+      if(s.id===ACT)b.append(el("span","live","LIVE"));b.append(s.title);tx.append(b);if(s.subtitle)tx.append(el("small","",s.subtitle),el("br"));
+      tx.append(el("small","",(s.panelists.length?s.panelists.join(", "):"No names yet")));row.append(tx);
+      const go=el("button","btn sm",s.id===ACT?"Live now":"Go live");go.disabled=s.id===ACT;go.onclick=()=>sessCall({action:"activate",id:s.id,day:+$("dayPick").value});
+      const ed=el("button","btn sm ghost","Edit");ed.onclick=()=>openEdit(s);row.append(go,ed);out.push(row)})}
+  $("sessList").replaceChildren(...out);$("endSess").style.display=ACT?"":"none";
+}
+function openEdit(s){
+  editing=s?s.id:null;const d=s||{type:"panel",title:"",subtitle:"",panelists:[]},box=$("sessEdit");box.style.display="block";
+  box.replaceChildren();
+  const f=(l,node,w)=>{const wrap=el("div",w?"w":"");wrap.append(el("label","",l),node);return wrap};
+  const g=el("div","g"),title=el("input"),sub=el("input"),type=el("select"),names=el("textarea");
+  title.value=d.title;sub.value=d.subtitle;names.rows=6;names.value=d.panelists.join("\n");
+  Object.entries({panel:"Panel",interview:"One-on-one interview",speaker:"Speaker"}).forEach(([v,t])=>type.add(new Option(t,v)));type.value=d.type;
+  g.append(f("Session title",title),f("Type",type),f("Subtitle or topic",sub,1),f("Panelists, one name per line (add, rename or remove)",names,1));
+  const save=el("button","btn","Save session"),cancel=el("button","btn ghost","Cancel"),del=el("button","btn ghost","Delete");
+  const acts=el("div","acts");acts.style.marginTop=".8rem";acts.append(save,cancel);if(s)acts.append(del);
+  box.append(el("h3","",s?"Edit session":"Add session"),g,acts);
+  save.onclick=async()=>{
+    const upd={id:s?s.id:"",type:type.value,title:title.value.trim(),subtitle:sub.value.trim(),panelists:names.value.split("\n").map(x=>x.trim()).filter(Boolean)};
+    if(!upd.title){$("err").textContent="Give the session a title.";return}
+    const next=s?S.map(x=>x.id===s.id?upd:x):[...S,upd];if(await sessCall({action:"save",sessions:next})){box.style.display="none";$("err").textContent=""}};
+  cancel.onclick=()=>{box.style.display="none"};
+  del.onclick=async()=>{if(confirm("Delete this session? Questions already sent to it keep their session name."))if(await sessCall({action:"save",sessions:S.filter(x=>x.id!==s.id)}))box.style.display="none"};
+  box.scrollIntoView({behavior:"smooth",block:"nearest"});title.focus();
+}
+$("addSess").onclick=()=>openEdit(null);
+$("endSess").onclick=()=>sessCall({action:"clear"});
+function fillFilters(){
+  const a=$("sf"),av=a.value;a.replaceChildren(new Option("All sessions",""),...S.map(s=>new Option(s.title,s.id)));a.value=S.some(s=>s.id===av)?av:"";
+}
+
+/* ---------- questions ---------- */
 async function sync(){
   const r=await fetch("/api/qadmin",{headers:hdr(),cache:"no-store"});
   if(r.status===401)throw new Error("auth");if(!r.ok)throw new Error("net");
-  Q=(await r.json()).questions;
+  Q=(await r.json()).questions;await sessCall();
   const sel=$("for"),cur=sel.value,names=[...new Set(Q.map(q=>q.to))].sort();
-  sel.replaceChildren(new Option("All speakers",""),...names.map(n=>new Option(n,n)));sel.value=names.includes(cur)?cur:"";
+  sel.replaceChildren(new Option("Everyone asked",""),...names.map(n=>new Option(n,n)));sel.value=names.includes(cur)?cur:"";
   draw();$("status").textContent="Updated "+new Date().toLocaleTimeString("en-NG",{timeZone:"Africa/Lagos",hour:"numeric",minute:"2-digit",second:"2-digit"});
 }
 async function setStatus(key,status){
@@ -81,23 +149,20 @@ async function setStatus(key,status){
   if(!r.ok){$("err").textContent="Couldn’t update that question.";return}
   const q=Q.find(x=>x.key===key);if(q)q.status=status;draw();
   if(status==="published"||status==="answered"){try{const v=await(await fetch("/api/questions?fresh=1&t="+Date.now(),{cache:"no-store"})).json();
-    $("status").textContent=v.questions.some(x=>x.id===key)?"✓ On the live screen now":"Saved, but the live screen hasn’t updated yet. Press Refresh in a few seconds."}catch(e){}}
+    $("status").textContent=v.questions.some(x=>x.id===key)?"✓ Approved. Shows on the live screen when its session is live.":"Saved, but the live list hasn’t updated yet. Press Refresh in a few seconds."}catch(e){}}
 }
 function draw(){
   const np=Q.filter(q=>q.status==="pending"||q.status==="held").length;document.title=(np?"("+np+") ":"")+"BCC 3.0 Question Moderation";
-  $("tabs").replaceChildren(...TABS.map(([k,l,fn])=>{const b=document.createElement("button");b.className="tab"+(k==="review"?" review":"")+(tab===k?" on":"");
-    const n=document.createElement("b");n.textContent=Q.filter(fn).length;b.append(n,l);b.onclick=()=>{tab=k;draw()};return b}));
-  const fn=TABS.find(t=>t[0]===tab)[2],s=$("q").value.toLowerCase().trim(),f=$("for").value;
-  $("rows").replaceChildren(...Q.filter(q=>fn(q)&&(!f||q.to===f)&&(!s||(q.text+q.name).toLowerCase().includes(s))).map(q=>{
-    const tr=document.createElement("tr"),add=(...p)=>{const td=document.createElement("td");td.append(...p);tr.append(td);return td};
-    const small=t=>Object.assign(document.createElement("small"),{textContent:t});
-    add(q.text).className="q";
-    add(q.to);add(q.name,small(q.email));add(fmt(q.at));
-    const c=document.createElement("span");c.className="chip"+(["rejected","held","pending"].includes(q.status)?" bad":q.status==="hidden"?" mute":"");c.textContent=label[q.status]||q.status;
-    add(c,...(q.reason?[small(q.reason)]:[]));
-    if(q.status==='published'||q.status==='answered'){const k=document.createElement('input');k.type='checkbox';k.checked=q.status==='answered';k.setAttribute('aria-label','Answered');k.style.cssText='width:1.7rem;height:1.7rem;accent-color:#E4002B;cursor:pointer';k.onchange=()=>setStatus(q.key,k.checked?'answered':'published');add(k)}else add('–');
-    const a=document.createElement("div");a.className="acts";
-    const btn=(t,st,ghost)=>{const b=document.createElement("button");b.className="btn sm"+(ghost?" ghost":"");b.textContent=t;b.onclick=()=>setStatus(q.key,st);a.append(b)};
+  $("tabs").replaceChildren(...TABS.map(([k,l,fn])=>{const b=el("button","tab"+(k==="review"?" review":"")+(tab===k?" on":""));
+    b.append(el("b","",Q.filter(fn).length),l);b.onclick=()=>{tab=k;draw()};return b}));
+  const fn=TABS.find(t=>t[0]===tab)[2],s=$("q").value.toLowerCase().trim(),f=$("for").value,sf=$("sf").value;
+  $("rows").replaceChildren(...Q.filter(q=>fn(q)&&(!f||q.to===f)&&(!sf||q.sessionId===sf)&&(!s||(q.text+q.name).toLowerCase().includes(s))).map(q=>{
+    const tr=el("tr"),add=(...p)=>{const td=el("td");td.append(...p);tr.append(td);return td};
+    add(q.text).className="q";add(q.session||"-");add(q.to);add(q.name,el("small","",q.email));add(fmt(q.at));
+    const c=el("span","chip"+(["rejected","held","pending"].includes(q.status)?" bad":q.status==="hidden"?" mute":""),label[q.status]||q.status);
+    add(c,...(q.reason?[el("small","",q.reason)]:[]));
+    if(q.status==="published"||q.status==="answered"){const k=el("input");k.type="checkbox";k.checked=q.status==="answered";k.setAttribute("aria-label","Answered");k.style.cssText="width:1.7rem;height:1.7rem;accent-color:#E4002B;cursor:pointer;padding:0";k.onchange=()=>setStatus(q.key,k.checked?"answered":"published");add(k)}else add("–");
+    const a=el("div","acts"),btn=(t,st,ghost)=>{const b=el("button","btn sm"+(ghost?" ghost":""),t);b.onclick=()=>setStatus(q.key,st);a.append(b)};
     if(["pending","held","rejected","hidden"].includes(q.status))btn("Approve and show","published");
     if(q.status!=="hidden")btn("Hide","hidden",1);
     add(a);return tr}));
@@ -109,7 +174,7 @@ async function start(){
   catch(e){pin="";sessionStorage.removeItem("bcc_admin");$("lerr").textContent=e.message==="auth"?"Wrong passcode.":"Couldn’t reach the server."}
 }
 $("go").onclick=()=>{pin=$("pin").value;start()};$("pin").addEventListener("keydown",e=>{if(e.key==="Enter")$("go").click()});
-$("q").oninput=draw;$("for").onchange=draw;$("refresh").onclick=()=>sync().catch(()=>$("err").textContent="Couldn’t refresh.");
+$("q").oninput=draw;$("for").onchange=draw;$("sf").onchange=draw;$("refresh").onclick=()=>sync().catch(()=>$("err").textContent="Couldn’t refresh.");
 $("out").onclick=()=>{sessionStorage.removeItem("bcc_admin");location.reload()};
 if(pin)start();
 </script>
