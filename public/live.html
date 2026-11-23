@@ -28,7 +28,7 @@ h1{font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:clamp(1.8r
 .chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem}
 .chip{font:800 .95rem var(--body);background:transparent;color:var(--w);border:3px solid var(--w);padding:.3rem .9rem;cursor:pointer}
 .chip.on{border-color:var(--y)}
-main{padding:1.5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.4rem}
+main{padding:1.5rem 1.5rem 3.6rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.4rem}
 .card{background:var(--y);color:var(--k);padding:1.3rem 1.4rem;display:flex;flex-direction:column;gap:1rem;justify-content:space-between;box-shadow:8px 8px 0 var(--r)}
 .card.new{animation:in .6s cubic-bezier(.2,1.4,.4,1);outline:6px solid var(--w)}
 @keyframes in{from{transform:translateY(-30px) scale(.94);opacity:0}}
@@ -80,5 +80,6 @@ function draw(){
 $("fs").onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
 pull();setInterval(pull,4000);
 </script>
+<script src="devtag.js" defer></script>
 </body>
 </html>

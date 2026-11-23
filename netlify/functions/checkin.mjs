@@ -12,7 +12,11 @@ const newId = (day) => {
 
 export default async (req) => {
   const test = process.env.TEST_MODE === "true";
-  if (req.method === "GET") return json({ today: lagosDate(), testMode: test });
+  if (req.method === "GET") {
+    let epoch = "0";
+    try { epoch = (await rst("questions").get("config/epoch", { type: "text" })) || "0"; } catch { /* default */ }
+    return json({ today: lagosDate(), testMode: test, epoch });
+  }
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   let b;

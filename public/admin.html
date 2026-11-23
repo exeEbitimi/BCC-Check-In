@@ -60,9 +60,17 @@ td small{display:block;opacity:.7}
       <button class="btn ghost" id="refresh">Refresh</button>
       <small id="status"></small><small id="mailstat" style="margin-left:1rem"></small>
     </div>
+    <div class="tools"><label style="font-weight:800;display:flex;align-items:center;gap:.6rem;cursor:pointer"><input type="checkbox" id="devtag" style="width:1.4rem;height:1.4rem;accent-color:#E4002B"> Show the “Built by” developer credit on public pages</label><small id="devmsg" style="margin-left:0;font-weight:700"></small></div>
     <div class="err" id="err"></div>
     <div class="tw"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Creative field</th><th>Brand / organisation</th><th>City</th><th>Day 1 time in</th><th>Day 2 time in</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
     <p style="margin-top:1rem"><button class="btn ghost" id="more" type="button" style="display:none">Show more</button></p>
+    <section style="margin-top:3rem;border:4px solid var(--r);padding:1.2rem">
+      <h3 style="font-family:var(--disp);font-weight:800;font-stretch:75%;font-size:1.8rem;color:var(--r)">Clear test data</h3>
+      <p style="margin:.4rem 0 .8rem">Permanently deletes saved entries. This cannot be undone. Only works while <b>ALLOW_RESET</b> is set to true in Netlify.</p>
+      <div class="tools"><select id="wscope" style="border:3px solid #000;padding:.65rem .8rem;font:inherit"><option value="all">Everything (check-ins, tickets, questions, emails)</option><option value="checkins">Check-ins, tickets and emails only</option><option value="questions">Questions only</option></select>
+      <input id="wtype" placeholder="Type DELETE ALL to confirm" autocomplete="off" aria-label="Confirmation"><button class="btn" id="wipe" type="button" style="background:var(--r);border-color:var(--r);color:#fff">Clear data</button></div>
+      <div class="err" id="wmsg" role="alert"></div>
+    </section>
   </div>
 </main>
 <script>
@@ -122,7 +130,7 @@ $("csv").onclick=()=>{const L=view().map(p=>[p.name,p.shown,p.phone,p.field,p.br
 $("q").oninput=()=>{limit=200;draw()};$("more").onclick=()=>{limit+=300;draw()};
 async function start(){
   $("lerr").textContent="";
-  try{await sync();$("login").style.display="none";$("app").style.display="block";$("out").style.display="";sessionStorage.setItem("bcc_admin",pin);
+  try{await sync();loadSet();$("login").style.display="none";$("app").style.display="block";$("out").style.display="";sessionStorage.setItem("bcc_admin",pin);
     clearInterval(timer);timer=setInterval(()=>sync().catch(()=>{}),45000)}
   catch(e){pin="";sessionStorage.removeItem("bcc_admin");
     if($("app").style.display==="block")$("err").textContent="Couldn’t refresh. Check your connection.";
@@ -131,6 +139,21 @@ async function start(){
 $("go").onclick=()=>{pin=$("pin").value;start()};$("pin").addEventListener("keydown",e=>{if(e.key==="Enter")$("go").click()});
 $("refresh").onclick=()=>sync().catch(()=>$("err").textContent="Couldn’t refresh. Check your connection.");
 $("out").onclick=()=>{sessionStorage.removeItem("bcc_admin");location.reload()};
+$("wipe").onclick=async()=>{
+  const msg=$("wmsg");msg.textContent="";
+  if($("wtype").value.trim()!=="DELETE ALL"){msg.textContent="Type DELETE ALL exactly to confirm.";return}
+  $("wipe").disabled=true;let total=0;
+  try{for(;;){const r=await fetch("/api/reset",{method:"POST",headers:{...hdr(),"Content-Type":"application/json"},body:JSON.stringify({confirm:"DELETE ALL",scope:$("wscope").value})});
+    const j=await r.json().catch(()=>({}));if(!r.ok){msg.textContent=j.error||"Couldn’t clear the data.";break}
+    total+=j.deleted;msg.textContent="Deleted "+total+" entries…";
+    if(j.done){recs.clear();keys=[];draw();msg.textContent="Done. Cleared "+total+" entries.";$("wtype").value="";sync().catch(()=>{});break}}}
+  catch(e){msg.textContent="Couldn’t reach the server."}
+  $("wipe").disabled=false};
+async function loadSet(){try{const j=await(await fetch("/api/settings?fresh=1&t="+Date.now(),{cache:"no-store"})).json();$("devtag").checked=j.devtag!==false}catch(e){}}
+$("devtag").onchange=async()=>{const on=$("devtag").checked,m=$("devmsg");m.textContent="Saving…";
+  try{const r=await fetch("/api/settings",{method:"POST",headers:{...hdr(),"Content-Type":"application/json"},body:JSON.stringify({devtag:on})});
+    if(!r.ok)throw 0;m.textContent=on?"On. Public pages pick it up within about 15 seconds.":"Off. Public pages hide it within about 15 seconds."}
+  catch(e){$("devtag").checked=!on;m.textContent="Couldn’t save. Try again."}};
 if(pin)start();
 </script>
 </body>

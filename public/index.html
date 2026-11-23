@@ -248,8 +248,10 @@ $("save").onclick=()=>{
   const a=document.createElement("a");a.href=c.toDataURL("image/png");a.download=$("pId").textContent+"-pass.png";a.click();
 };
 $("mClose").onclick=()=>{$("askModal").hidden=true};addEventListener("keydown",e=>{if(e.key==="Escape")$("askModal").hidden=true});
-fetch("/api/checkin",{cache:"no-store"}).then(r=>r.json()).then(j=>setup(j.today,j.testMode))
+function epoch(e){e=String(e||"0");try{if((localStorage.getItem("bcc_epoch")||"0")!==e)["bcc_passes","bcc_profile","bcc_ticket"].forEach(k=>localStorage.removeItem(k));localStorage.setItem("bcc_epoch",e)}catch(x){}}
+fetch("/api/checkin",{cache:"no-store"}).then(r=>r.json()).then(j=>{epoch(j.epoch);setup(j.today,j.testMode)})
   .catch(()=>setup(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date()),location.protocol==="file:"));
 </script>
+<script src="devtag.js" defer></script>
 </body>
 </html>

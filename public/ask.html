@@ -128,7 +128,7 @@ async function api(body){const r=await fetch("/api/questions",{method:"POST",hea
 async function verify(t,auto){
   $("verr").textContent="";const b=$("vbtn");b.disabled=true;
   try{const{ok,j}=await api({action:"verify",ticket:t});
-    if(!ok){if(!auto)$("verr").textContent=j.error||"Something went wrong."}
+    if(!ok){if(!auto)$("verr").textContent=j.error||"Something went wrong.";else try{localStorage.removeItem("bcc_ticket")}catch(e){}}
     else{ticket=t.toUpperCase();try{localStorage.setItem("bcc_ticket",ticket)}catch(e){}$("who").textContent=j.name;$("verify").style.display="none";$("ask").style.display="block";mine()}
   }catch(e){if(!auto)$("verr").textContent="We couldn’t reach the server. Check your connection."}
   b.disabled=false;
@@ -180,5 +180,6 @@ list();setInterval(()=>{if(!document.hidden)list()},10000);setInterval(()=>{if(t
 const saved=localStorage.getItem("bcc_ticket")||((l=>l&&(l[2]||l[1]))(load("bcc_passes"))||{}).id;
 if(saved){$("ticket").value=saved;verify(saved,true)}
 </script>
+<script src="devtag.js" defer></script>
 </body>
 </html>
